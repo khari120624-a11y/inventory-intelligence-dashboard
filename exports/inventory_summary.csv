@@ -1,0 +1,31 @@
+sku,product_name,category,current_stock,total_demand,avg_daily_demand,days_of_inventory,inventory_status,movement_class,demand_trend,trend_pct,unit_cost,unit_price,inventory_value,excess_inventory,overstock_value,reorder_point,lead_time_days,safety_stock,recommended_action
+SKU-APP-201,Thermal Fleece Running Hoodie,Apparel,16.0,2002.0,11.122,1.4,STOCK-OUT / CRITICAL,Fast Moving,Increasing,21.2,24.0,59.99,384.0,0.0,0.0,167,14,48,Prioritize Immediate Replenishment
+SKU-APP-202,Moisture-Wicking Athletic Tee,Apparel,220.0,753.0,4.183,52.6,HEALTHY,Fast Moving,Stable,1.9,9.5,28.0,2090.0,0.0,0.0,56,10,16,Maintain Scheduled Monitoring
+SKU-APP-203,Heavyweight Arctic Winter Parka,Apparel,510.0,312.0,1.733,294.3,OVERSTOCK,Normal Moving,Decreasing,-22.7,85.0,179.99,43350.0,406.0,34510.0,76,30,22,Halt Replenishment & Stimulate Demand
+SKU-APP-204,Seamless Workout Compression Leggings,Apparel,4.0,1681.0,9.339,0.4,STOCK-OUT / CRITICAL,Fast Moving,Increasing,15.2,16.0,44.99,64.0,0.0,0.0,98,10,28,Prioritize Immediate Replenishment
+SKU-APP-205,Formal Wool Blazer Tailored,Apparel,115.0,28.0,0.156,737.2,SLOW-MOVING,Slow Moving,Decreasing,-25.0,110.0,219.0,12650.0,105.6,11616.0,14,25,4,Review Purchasing Levels & Evaluate Promotional Repositioning
+SKU-APP-206,Organic Cotton Crewneck Sweatshirt,Apparel,135.0,785.0,4.361,31.0,HEALTHY,Fast Moving,Stable,6.6,20.0,49.5,2700.0,0.0,0.0,67,12,19,Maintain Scheduled Monitoring
+SKU-ELC-001,Wireless Noise-Canceling Headphones,Electronics,12.0,2052.0,11.4,1.1,STOCK-OUT / CRITICAL,Fast Moving,Increasing,31.6,65.0,129.99,780.0,0.0,0.0,167,14,48,Prioritize Immediate Replenishment
+SKU-ELC-002,Smart Fitness Watch V2,Electronics,48.0,760.0,4.222,11.4,LOW STOCK,Fast Moving,Stable,1.6,95.0,189.5,4560.0,0.0,0.0,56,10,16,Initiate Standard Purchase Reorder
+SKU-ELC-003,4K Ultra-HD Action Camera,Electronics,420.0,325.0,1.806,232.6,OVERSTOCK,Normal Moving,Stable,-7.7,130.0,249.0,54600.0,311.6,40508.0,53,21,15,Halt Replenishment & Stimulate Demand
+SKU-ELC-004,USB-C Fast Charging Cable 2M,Electronics,5.0,1642.0,9.122,0.5,STOCK-OUT / CRITICAL,Fast Moving,Increasing,21.6,3.2,14.99,16.0,0.0,0.0,69,7,20,Prioritize Immediate Replenishment
+SKU-ELC-005,Vintage Stereo Turntable,Electronics,85.0,22.0,0.122,696.7,SLOW-MOVING,Slow Moving,Decreasing,-30.8,180.0,319.0,15300.0,77.7,13986.0,15,28,4,Review Purchasing Levels & Evaluate Promotional Repositioning
+SKU-ELC-006,Bluetooth Conference Speaker,Electronics,65.0,785.0,4.361,14.9,LOW STOCK,Fast Moving,Stable,2.8,42.0,89.99,2730.0,0.0,0.0,78,14,22,Initiate Standard Purchase Reorder
+SKU-ELC-007,Ergonomic Mechanical Keyboard,Electronics,18.0,1035.0,5.75,3.1,LOW STOCK,Fast Moving,Stable,7.4,58.0,119.0,1044.0,0.0,0.0,87,12,25,Initiate Standard Purchase Reorder
+SKU-HMK-101,Digital Air Fryer Oven 6Qt,Home & Kitchen,14.0,1901.0,10.561,1.3,STOCK-OUT / CRITICAL,Fast Moving,Stable,14.8,48.0,99.99,672.0,0.0,0.0,167,14,48,Prioritize Immediate Replenishment
+SKU-HMK-102,Stainless Steel French Press,Home & Kitchen,110.0,767.0,4.261,25.8,HEALTHY,Fast Moving,Stable,-0.8,14.0,34.5,1540.0,0.0,0.0,56,10,16,Maintain Scheduled Monitoring
+SKU-HMK-103,Cold Brew Iced Coffee Pitcher,Home & Kitchen,390.0,290.0,1.611,242.1,OVERSTOCK,Normal Moving,Stable,-11.7,11.5,27.99,4485.0,293.3,3372.95,38,15,11,Halt Replenishment & Stimulate Demand
+SKU-HMK-104,Electric Precision Milk Frother,Home & Kitchen,0.0,1678.0,9.322,0.0,STOCK-OUT / CRITICAL,Fast Moving,Increasing,28.0,6.5,19.99,0.0,0.0,0.0,69,7,20,Prioritize Urgent Replenishment (Emergency Expedite)
+SKU-HMK-105,Cast Iron Dutch Oven 5.5Qt,Home & Kitchen,140.0,16.0,0.089,1573.0,SLOW-MOVING,Slow Moving,Increasing,28.6,41.0,84.99,5740.0,134.7,5522.7,11,21,3,Review Purchasing Levels & Evaluate Promotional Repositioning
+SKU-HMK-106,Smart WiFi Food Scale,Home & Kitchen,92.0,804.0,4.467,20.6,HEALTHY,Fast Moving,Stable,11.0,17.5,39.99,1610.0,0.0,0.0,67,12,19,Maintain Scheduled Monitoring
+SKU-HMK-107,Silicone Baking Mat Set,Home & Kitchen,22.0,1051.0,5.839,3.8,LOW STOCK,Fast Moving,Stable,-2.8,6.0,18.5,132.0,0.0,0.0,73,10,21,Initiate Standard Purchase Reorder
+SKU-HPC-301,Sonic Electric Toothbrush Pro,Health & Personal Care,25.0,1055.0,5.861,4.3,LOW STOCK,Fast Moving,Stable,-8.2,29.0,69.99,725.0,0.0,0.0,102,14,29,Initiate Standard Purchase Reorder
+SKU-HPC-302,Collagen Peptide Powder 500g,Health & Personal Care,160.0,843.0,4.683,34.2,HEALTHY,Fast Moving,Stable,4.6,15.0,36.0,2400.0,0.0,0.0,67,12,19,Maintain Scheduled Monitoring
+SKU-HPC-303,Infrared Shiatsu Neck Massager,Health & Personal Care,340.0,317.0,1.761,193.1,OVERSTOCK,Normal Moving,Stable,-4.3,22.0,54.99,7480.0,234.3,5154.6,50,20,14,Halt Replenishment & Stimulate Demand
+SKU-HPC-304,Daily Multivitamin Gummies 120ct,Health & Personal Care,8.0,1712.0,9.511,0.8,STOCK-OUT / CRITICAL,Fast Moving,Increasing,24.4,8.5,22.5,68.0,0.0,0.0,69,7,20,Prioritize Immediate Replenishment
+SKU-HPC-305,Aromatherapy Ultrasonic Diffuser,Health & Personal Care,180.0,31.0,0.172,1046.5,SLOW-MOVING,Slow Moving,Decreasing,-59.1,13.5,32.99,2430.0,169.7,2290.95,10,18,3,Review Purchasing Levels & Evaluate Promotional Repositioning
+SKU-SPO-401,Insulated Hydro Water Bottle 32oz,Sports & Outdoors,20.0,1020.0,5.667,3.5,LOW STOCK,Fast Moving,Stable,7.7,11.0,29.99,220.0,0.0,0.0,73,10,21,Initiate Standard Purchase Reorder
+SKU-SPO-402,Non-Slip High Density Yoga Mat,Sports & Outdoors,150.0,838.0,4.656,32.2,HEALTHY,Fast Moving,Stable,-1.9,16.0,38.0,2400.0,0.0,0.0,78,14,22,Maintain Scheduled Monitoring
+SKU-SPO-403,Heavy-Duty Resistance Bands Set,Sports & Outdoors,480.0,337.0,1.872,256.4,OVERSTOCK,Normal Moving,Stable,-6.3,8.0,24.99,3840.0,367.7,2941.6,38,15,11,Halt Replenishment & Stimulate Demand
+SKU-SPO-404,Ultralight Backpacking Tent 2-Person,Sports & Outdoors,75.0,21.0,0.117,641.0,SLOW-MOVING,Slow Moving,Increasing,33.3,98.0,199.99,7350.0,68.0,6664.0,15,28,4,Review Purchasing Levels & Evaluate Promotional Repositioning
+SKU-SPO-405,Compact Camping Hammock Portable,Sports & Outdoors,95.0,804.0,4.467,21.3,HEALTHY,Fast Moving,Stable,3.5,13.0,34.99,1235.0,0.0,0.0,78,14,22,Maintain Scheduled Monitoring

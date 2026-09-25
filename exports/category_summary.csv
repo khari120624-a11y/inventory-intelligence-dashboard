@@ -1,0 +1,6 @@
+category,total_products,total_inventory,total_demand,total_inventory_value,total_overstock_value,avg_days_of_inventory,critical_count,low_stock_count,healthy_count,overstock_count,slow_moving_count
+Apparel,6,1000.0,5561.0,61238.0,46126.0,186.2,2,0,2,1,1
+Electronics,7,653.0,6621.0,79030.0,54494.0,137.2,2,3,0,1,1
+Health & Personal Care,5,713.0,3958.0,13103.0,7445.55,58.1,1,1,1,1,1
+Home & Kitchen,7,768.0,6507.0,14179.0,8895.65,48.9,2,1,2,1,1
+Sports & Outdoors,5,820.0,3020.0,15045.0,9605.6,190.9,0,1,2,1,1
