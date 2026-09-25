@@ -51,8 +51,186 @@ st.set_page_config(
 )
 
 # ── 3-D Robot Intro Animation ─────────────────────────────────────────────────
-# Show only once per browser session via sessionStorage (client-side guard)
+# Uses st.components.v1.html so JS executes freely (no Streamlit CSP blocking)
+import streamlit.components.v1 as components
+
+if "intro_shown" not in st.session_state:
+    st.session_state.intro_shown = False
+
+if not st.session_state.intro_shown:
+    st.session_state.intro_shown = True
+    components.html("""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#000}
+/* ── overlay ── */
+#ov{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse 120% 100% at 50% 60%,#0D1B3E 0%,#060B18 55%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;transition:opacity 1s ease,transform 1s ease}
+#ov.hide{opacity:0;transform:scale(1.06);pointer-events:none}
+/* stars */
+.stars{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 8% 12%,rgba(255,255,255,.8) 0%,transparent 100%),radial-gradient(1px 1px at 20% 70%,rgba(255,255,255,.6) 0%,transparent 100%),radial-gradient(1px 1px at 35% 5%,rgba(56,189,248,.9) 0%,transparent 100%),radial-gradient(1px 1px at 50% 45%,rgba(255,255,255,.5) 0%,transparent 100%),radial-gradient(1px 1px at 62% 25%,rgba(192,132,252,.9) 0%,transparent 100%),radial-gradient(1px 1px at 75% 80%,rgba(255,255,255,.7) 0%,transparent 100%),radial-gradient(1px 1px at 88% 15%,rgba(56,189,248,.8) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 15% 90%,rgba(56,189,248,.7) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 45% 55%,rgba(192,132,252,.7) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 70% 35%,rgba(255,255,255,.8) 0%,transparent 100%);animation:twinkle 4s ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.5}to{opacity:1}}
+/* cash particles */
+.cp{position:absolute;animation:cf linear infinite;opacity:0;filter:drop-shadow(0 0 6px rgba(52,211,153,.8));pointer-events:none}
+@keyframes cf{0%{transform:translateY(110vh) rotate(0deg);opacity:0}10%{opacity:.9}90%{opacity:.6}100%{transform:translateY(-10vh) rotate(380deg);opacity:0}}
+/* orbit rings */
+.or{position:absolute;border-radius:50%;border:1px solid rgba(56,189,248,.12);animation:orb linear infinite;pointer-events:none}
+.or::after{content:'';position:absolute;width:8px;height:8px;border-radius:50%;background:#38BDF8;top:-4px;left:50%;transform:translateX(-50%);box-shadow:0 0 12px #38BDF8}
+.r1{width:200px;height:200px;top:50%;left:50%;margin:-100px 0 0 -100px;animation-duration:5s}
+.r2{width:310px;height:310px;top:50%;left:50%;margin:-155px 0 0 -155px;animation-duration:9s;animation-direction:reverse}
+.r3{width:440px;height:440px;top:50%;left:50%;margin:-220px 0 0 -220px;animation-duration:15s}
+@keyframes orb{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+/* scene */
+.scene{display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;animation:si .9s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes si{from{transform:translateY(60px) scale(.85);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+/* robot */
+.robot{position:relative;width:140px;animation:bob 2.2s ease-in-out infinite,sp 8s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes sp{0%{transform:perspective(600px) rotateY(0deg) translateY(0)}25%{transform:perspective(600px) rotateY(14deg) translateY(-6px)}50%{transform:perspective(600px) rotateY(0deg) translateY(-12px)}75%{transform:perspective(600px) rotateY(-14deg) translateY(-6px)}100%{transform:perspective(600px) rotateY(0deg) translateY(0)}}
+.ant{position:absolute;top:-24px;left:50%;transform:translateX(-50%);width:4px;height:20px;background:linear-gradient(180deg,#38BDF8,#1E40AF);border-radius:2px;box-shadow:0 0 8px #38BDF8}
+.ant::after{content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#7DD3FC,#0EA5E9);box-shadow:0 0 16px #38BDF8,0 0 32px rgba(56,189,248,.6);animation:ap 1.1s ease-in-out infinite}
+@keyframes ap{0%,100%{transform:translateX(-50%) scale(1);box-shadow:0 0 10px #38BDF8,0 0 22px rgba(56,189,248,.4)}50%{transform:translateX(-50%) scale(1.4);box-shadow:0 0 22px #38BDF8,0 0 44px rgba(56,189,248,.8)}}
+.head{width:80px;height:65px;margin:0 auto;background:linear-gradient(160deg,#1E3A5F,#0F2040,#071628);border:2px solid rgba(56,189,248,.5);border-radius:14px 14px 8px 8px;position:relative;box-shadow:0 0 22px rgba(56,189,248,.25),0 4px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1)}
+.head::before{content:'';position:absolute;top:12px;left:10px;right:10px;height:24px;background:linear-gradient(135deg,rgba(56,189,248,.12),rgba(99,102,241,.12));border:1px solid rgba(56,189,248,.4);border-radius:6px;box-shadow:0 0 14px rgba(56,189,248,.25) inset}
+.eye{position:absolute;top:17px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7DD3FC,#0369A1);animation:eg 1.8s ease-in-out infinite}
+.el{left:16px}.er{right:16px}
+@keyframes eg{0%,100%{box-shadow:0 0 8px #38BDF8,0 0 16px rgba(56,189,248,.4)}50%{box-shadow:0 0 20px #38BDF8,0 0 40px rgba(56,189,248,.8)}}
+.mouth{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:34px;height:8px;border-radius:0 0 8px 8px;border:2px solid rgba(56,189,248,.5);border-top:none;overflow:hidden}
+.mb{position:absolute;top:2px;left:2px;right:2px;height:3px;background:linear-gradient(90deg,#38BDF8,#818CF8,#C084FC,#38BDF8);background-size:300% 100%;border-radius:2px;animation:ms .8s linear infinite}
+@keyframes ms{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+.neck{width:22px;height:10px;background:linear-gradient(180deg,#1E3A5F,#0F2040);border:1px solid rgba(56,189,248,.3);border-radius:3px;margin:0 auto}
+.body{width:110px;height:90px;background:linear-gradient(160deg,#1A3352,#0E2038,#07152A);border:2px solid rgba(56,189,248,.4);border-radius:12px;position:relative;margin:0 auto;box-shadow:0 0 24px rgba(56,189,248,.18),0 8px 24px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07)}
+.body::after{content:'';position:absolute;bottom:14px;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,rgba(56,189,248,.5),transparent)}
+.chest{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:54px;height:32px;border:1px solid rgba(56,189,248,.35);border-radius:6px;display:flex;align-items:center;justify-content:center;gap:6px}
+.cd{width:9px;height:9px;border-radius:50%;animation:cb 1.2s ease-in-out infinite}
+.cd:nth-child(1){background:#EF4444;animation-delay:0s;box-shadow:0 0 8px #EF4444}
+.cd:nth-child(2){background:#F59E0B;animation-delay:.4s;box-shadow:0 0 8px #F59E0B}
+.cd:nth-child(3){background:#10B981;animation-delay:.8s;box-shadow:0 0 8px #10B981}
+@keyframes cb{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.7)}}
+.arms{position:absolute;top:0;left:-36px;right:-36px;display:flex;justify-content:space-between}
+.arm{width:26px;height:80px;background:linear-gradient(180deg,#1A3352,#0E2038);border:1.5px solid rgba(56,189,248,.35);border-radius:8px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.arm.L{transform-origin:top center;animation:hc 2.2s ease-in-out infinite}
+@keyframes hc{0%,100%{transform:rotate(-35deg) translateY(-8px)}50%{transform:rotate(-44deg) translateY(-15px)}}
+.arm.R{transform-origin:top center;animation:sw 2.2s ease-in-out infinite}
+@keyframes sw{0%,100%{transform:rotate(8deg)}50%{transform:rotate(16deg)}}
+.hand{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:22px;height:14px;background:linear-gradient(180deg,#1E3A5F,#0F2040);border:1.5px solid rgba(56,189,248,.4);border-radius:5px}
+.cash{position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);font-size:1.9rem;filter:drop-shadow(0 0 12px rgba(52,211,153,1)) drop-shadow(0 0 24px rgba(52,211,153,.5));animation:cw 2.2s ease-in-out infinite;z-index:10}
+@keyframes cw{0%,100%{transform:translateX(-50%) rotate(6deg) scale(1)}50%{transform:translateX(-50%) rotate(-6deg) scale(1.15)}}
+.legs{display:flex;justify-content:center;gap:12px;margin-top:4px}
+.leg{width:26px;height:38px;background:linear-gradient(180deg,#1A3352,#0E2038);border:1.5px solid rgba(56,189,248,.3);border-radius:6px 6px 10px 10px;position:relative}
+.foot{position:absolute;bottom:-8px;left:-4px;width:34px;height:10px;background:linear-gradient(180deg,#1E3A5F,#0D1B37);border:1.5px solid rgba(56,189,248,.35);border-radius:5px;box-shadow:0 4px 10px rgba(0,0,0,.5)}
+.leg:nth-child(1){animation:wl 2.2s ease-in-out infinite}
+.leg:nth-child(2){animation:wr 2.2s ease-in-out infinite}
+@keyframes wl{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes wr{0%,100%{transform:rotate(5deg)}50%{transform:rotate(-5deg)}}
+.rshadow{width:120px;height:16px;background:radial-gradient(ellipse,rgba(56,189,248,.22) 0%,transparent 70%);margin:10px auto 0;border-radius:50%;animation:shp 2.2s ease-in-out infinite}
+@keyframes shp{0%,100%{transform:scaleX(1);opacity:.7}50%{transform:scaleX(.8);opacity:.35}}
+/* text */
+.ititle{font-family:'Inter',sans-serif;font-size:clamp(1.6rem,5vw,2.6rem);font-weight:900;background:linear-gradient(135deg,#38BDF8,#818CF8,#C084FC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 12px rgba(56,189,248,.5));letter-spacing:-.02em;text-align:center;animation:fu 1s .4s both}
+.isub{font-size:.9rem;color:#94A3B8;margin-top:8px;letter-spacing:.08em;text-transform:uppercase;text-align:center;animation:fu 1s .7s both;font-family:'Inter',sans-serif}
+.itag{font-size:.78rem;color:#38BDF8;margin-top:6px;letter-spacing:.14em;text-transform:uppercase;text-align:center;animation:fu 1s 1s both;font-family:'Inter',sans-serif}
+@keyframes fu{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+/* progress */
+.pw{margin-top:28px;width:260px;animation:fu .5s 1.2s both}
+.pb{height:4px;background:rgba(56,189,248,.15);border-radius:2px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,#38BDF8,#818CF8,#C084FC);border-radius:2px;width:0%;box-shadow:0 0 14px rgba(56,189,248,.6);animation:pfi 3s .8s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes pfi{to{width:100%}}
+.pl{font-size:.7rem;color:#475569;text-align:center;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;font-family:'Inter',sans-serif}
+/* skip btn */
+#sk{margin-top:18px;background:transparent;border:1px solid rgba(56,189,248,.3);color:#475569;font-family:'Inter',sans-serif;font-size:.73rem;padding:6px 22px;border-radius:20px;cursor:pointer;letter-spacing:.08em;transition:all .2s;animation:fu .5s 2s both}
+#sk:hover{border-color:rgba(56,189,248,.7);color:#94A3B8;box-shadow:0 0 18px rgba(56,189,248,.2)}
+</style>
+</head>
+<body>
+<div id="ov">
+  <div class="stars"></div>
+  <div class="or r1"></div><div class="or r2"></div><div class="or r3"></div>
+  <span class="cp" style="left:6%;font-size:1.4rem;animation-duration:4.2s;animation-delay:0s">💵</span>
+  <span class="cp" style="left:15%;font-size:1.8rem;animation-duration:5.5s;animation-delay:.7s">💰</span>
+  <span class="cp" style="left:28%;font-size:1.1rem;animation-duration:3.8s;animation-delay:.2s">💵</span>
+  <span class="cp" style="left:40%;font-size:2rem;animation-duration:6.2s;animation-delay:1.4s">💸</span>
+  <span class="cp" style="left:54%;font-size:1.4rem;animation-duration:4.6s;animation-delay:.5s">💴</span>
+  <span class="cp" style="left:65%;font-size:1.4rem;animation-duration:5.1s;animation-delay:1s">💵</span>
+  <span class="cp" style="left:76%;font-size:1.4rem;animation-duration:3.6s;animation-delay:.3s">💰</span>
+  <span class="cp" style="left:86%;font-size:1.4rem;animation-duration:5.9s;animation-delay:.8s">💸</span>
+  <span class="cp" style="left:93%;font-size:1.1rem;animation-duration:4.3s;animation-delay:1.6s">💵</span>
+  <div class="scene">
+    <div class="robot">
+      <div class="ant"></div>
+      <div class="head">
+        <div class="eye el"></div>
+        <div class="eye er"></div>
+        <div class="mouth"><div class="mb"></div></div>
+      </div>
+      <div class="neck"></div>
+      <div class="body">
+        <div class="arms">
+          <div class="arm L"><div class="hand"></div><div class="cash">💵</div></div>
+          <div class="arm R"><div class="hand"></div></div>
+        </div>
+        <div class="chest"><div class="cd"></div><div class="cd"></div><div class="cd"></div></div>
+      </div>
+      <div class="legs">
+        <div class="leg"><div class="foot"></div></div>
+        <div class="leg"><div class="foot"></div></div>
+      </div>
+    </div>
+    <div class="rshadow"></div>
+    <div style="margin-top:22px">
+      <div class="ititle">Inventory Intelligence</div>
+      <div class="isub">Enterprise Analytics Platform</div>
+      <div class="itag">⚡ Demand · Risk · Forecasting ⚡</div>
+    </div>
+    <div class="pw">
+      <div class="pb"><div class="pf"></div></div>
+      <div class="pl" id="lbl">Initializing systems...</div>
+    </div>
+    <button id="sk" onclick="go()">SKIP INTRO ›</button>
+  </div>
+</div>
+<script>
+var ov=document.getElementById('ov');
+var lbl=document.getElementById('lbl');
+var steps=[
+  {t:600, msg:'Loading data pipeline...'},
+  {t:1200,msg:'Calibrating risk engine...'},
+  {t:1900,msg:'Generating forecasts...'},
+  {t:2600,msg:'Building dashboards...'},
+  {t:3200,msg:'Ready! \uD83D\uDE80'}
+];
+steps.forEach(function(s){setTimeout(function(){if(lbl)lbl.textContent=s.msg;},s.t);});
+function go(){
+  ov.classList.add('hide');
+  setTimeout(function(){ov.style.display='none';},1000);
+}
+setTimeout(go,4400);
+window.go=go;
+</script>
+</body>
+</html>""", height=700, scrolling=False)
+
+# Dummy placeholder that gets hidden — intro fills screen via the iframe
 st.markdown("""
+<style>
+/* Push iframe to cover full viewport */
+iframe[title="st.iframe"] {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 99999 !important;
+    border: none !important;
+    background: #000 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ── OLD INTRO BLOCK (disabled) ────────────────────────────────────────────────
+if False:
+    st.markdown("""
 <style>
 /* ═══════════════════════════════════ INTRO OVERLAY ══════════════════════════ */
 #robot-intro-overlay {
