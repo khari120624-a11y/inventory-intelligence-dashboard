@@ -199,7 +199,7 @@ var steps=[
   {t:1200,msg:'Calibrating risk engine...'},
   {t:1900,msg:'Generating forecasts...'},
   {t:2600,msg:'Building dashboards...'},
-  {t:3200,msg:'Ready! \uD83D\uDE80'}
+  {t:3200,msg:'Ready! 🚀'}
 ];
 steps.forEach(function(s){setTimeout(function(){if(lbl)lbl.textContent=s.msg;},s.t);});
 function go(){
