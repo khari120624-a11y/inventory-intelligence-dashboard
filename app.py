@@ -1233,14 +1233,24 @@ if st.sidebar.button("Generate & Update CSV Exports"):
     st.sidebar.success(f"Generated {len(exports)} analytical CSVs in `exports/`!")
 
 # Export Download Links
-if os.path.exists("exports/inventory_summary.csv"):
-    with open("exports/inventory_summary.csv", "rb") as f:
-        st.sidebar.download_button(
-            "⬇️ Download inventory_summary.csv",
-            f,
-            file_name="inventory_summary.csv",
-            mime="text/csv"
-        )
+export_files = [
+    ("inventory_summary.csv", "⬇️ Download inventory_summary.csv"),
+    ("product_risk.csv", "⬇️ Download product_risk.csv"),
+    ("demand_trends.csv", "⬇️ Download demand_trends.csv"),
+    ("category_summary.csv", "⬇️ Download category_summary.csv")
+]
+
+for fname, label in export_files:
+    fpath = os.path.join("exports", fname)
+    if os.path.exists(fpath):
+        with open(fpath, "rb") as f:
+            st.sidebar.download_button(
+                label,
+                f,
+                file_name=fname,
+                mime="text/csv",
+                key=f"dl_{fname}"
+            )
 
 # GLOBAL INTERACTIVE FILTERS
 st.sidebar.markdown("---")

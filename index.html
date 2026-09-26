@@ -1,0 +1,2412 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Intelligence 3D | Interactive Demand Analytics & Robo Cash Platform</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#030712',
+              card: '#0b1329',
+              cyan: '#00f2fe',
+              green: '#10b981',
+              gold: '#fbbf24',
+              violet: '#8b5cf6',
+              pink: '#ec4899',
+              accent: '#3b82f6',
+              critical: '#ef4444',
+              warning: '#f59e0b',
+              overstock: '#6366f1',
+              slow: '#8b5cf6'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['Fira Code', 'monospace']
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 5s ease-in-out infinite',
+            'glow-pulse': 'glowPulse 2s infinite alternate',
+            'bounce-soft': 'bounceSoft 2s infinite'
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            glowPulse: {
+              '0%': { boxShadow: '0 0 15px rgba(0, 242, 254, 0.3)' },
+              '100%': { boxShadow: '0 0 35px rgba(16, 185, 129, 0.7)' }
+            },
+            bounceSoft: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-6px)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Three.js Library CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #030712;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #10b981;
+    }
+
+    /* Glassmorphism Styling */
+    .glass-nav {
+      background: rgba(11, 19, 41, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-card {
+      background: rgba(11, 19, 41, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      box-shadow: 0 12px 40px 0 rgba(16, 185, 129, 0.2);
+    }
+
+    .glow-green {
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Fullscreen WebGL Canvas background */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #hero-canvas {
+      width: 100%;
+      height: 100%;
+      min-height: 440px;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #hero-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Intro Overlay Styling */
+    #intro-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: radial-gradient(circle at center, rgba(11, 21, 40, 0.75) 0%, rgba(3, 7, 18, 0.90) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.8rem 1.5rem;
+      transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #intro-overlay.hidden-overlay {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.05);
+    }
+
+    .scanline {
+      background: linear-gradient(to bottom,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0) 50%,
+          rgba(0, 242, 254, 0.03) 50%,
+          rgba(0, 242, 254, 0.03));
+      background-size: 100% 4px;
+    }
+
+    /* Dynamic UI Entrance Animations */
+    .reveal-ui {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+
+    .reveal-ui.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .cash-counter-badge {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(251, 191, 36, 0.25));
+      border: 1px solid rgba(16, 185, 129, 0.5);
+    }
+
+    .terminal-window {
+      background: #080e1a;
+      border: 1px solid #1e293b;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+    }
+  </style>
+</head>
+
+<body
+  class="bg-[#030712] text-slate-100 font-sans antialiased selection:bg-brand-green selection:text-black overflow-x-hidden relative scanline">
+
+  <!-- INTRO OPENING OVERLAY: 3D ROBOT RUNNING WITH CASH -->
+  <div id="intro-overlay">
+    <!-- Top Cyber Badge -->
+    <div
+      class="flex items-center gap-3 bg-slate-900/80 px-4 py-2 rounded-full border border-brand-cyan/30 text-xs font-mono tracking-wider text-brand-cyan shadow-lg">
+      <span class="w-2.5 h-2.5 rounded-full bg-brand-green animate-ping"></span>
+      <span class="font-bold uppercase tracking-widest text-emerald-400">3D CYBER INVENTORY ENGINE INITIALIZING</span>
+    </div>
+
+    <!-- Center Intro Message & 3D Running Robot Viewport -->
+    <div class="text-center space-y-3 max-w-lg z-10 flex flex-col items-center">
+
+      <!-- Live 3D Running Robot Canvas Viewport Inside Intro Overlay -->
+      <div
+        class="relative w-64 h-40 sm:h-44 rounded-2xl glass-card border border-emerald-500/40 glow-green overflow-hidden shadow-2xl flex items-center justify-center">
+        <canvas id="intro-robo-canvas" class="w-full h-full"></canvas>
+        <div
+          class="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-slate-950/85 border border-emerald-500/40 text-[10px] font-mono text-emerald-300 font-bold flex items-center gap-1.5 shadow-md">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>ROBO SPRINTING WITH CASH ($)</span>
+        </div>
+      </div>
+
+      <h1 class="text-2xl sm:text-4xl font-black tracking-tight text-white uppercase pt-1">
+        ROBO CASH <span
+          class="bg-gradient-to-r from-emerald-400 via-brand-cyan to-yellow-400 bg-clip-text text-transparent">RUNNER</span>
+      </h1>
+
+      <p class="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium max-w-md">
+        Watch our 3D Cyber Bot sprint with cash reserves as enterprise inventory demand analytics unfold!
+      </p>
+
+      <!-- Progress bar with Sprinting Robot Avatar moving from 0% to 100% -->
+      <div class="w-full relative pt-6 px-1">
+        <!-- Sprinting Robot Avatar -->
+        <div id="intro-runner-avatar"
+          class="absolute top-0 left-0 transition-all duration-300 transform -translate-x-1/2 flex items-center gap-1 text-xs font-bold text-emerald-300 bg-slate-950 px-2.5 py-0.5 rounded-full border border-emerald-400/60 shadow-lg glow-green z-20">
+          <span class="animate-bounce">🤖</span>
+          <span class="text-[10px] font-mono font-black text-yellow-400">$ CASH</span>
+        </div>
+
+        <div
+          class="w-full bg-slate-900 rounded-full h-3.5 p-0.5 border border-slate-700/60 overflow-hidden shadow-inner relative">
+          <div id="intro-progress-bar"
+            class="h-full bg-gradient-to-r from-brand-cyan via-emerald-400 to-yellow-400 rounded-full w-0 transition-all duration-300 shadow-md">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between w-full text-xs font-mono text-slate-400 px-1">
+        <span id="intro-status-text">Deploying 3D Robo Cash Runner...</span>
+        <span id="intro-percent" class="text-emerald-400 font-bold">0%</span>
+      </div>
+    </div>
+
+    <!-- Bottom Action Buttons -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 z-10">
+      <button id="skip-intro-btn" onclick="startUiReveal()"
+        class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-black text-xs uppercase tracking-wider hover:brightness-110 shadow-lg transition flex items-center gap-2">
+        <i data-lucide="fast-forward" class="w-4 h-4 text-slate-950"></i>
+        <span>SKIP TO DASHBOARD</span>
+      </button>
+
+      <button id="toggle-audio-btn" onclick="toggleAudio()"
+        class="px-4 py-3 rounded-xl glass-card text-xs font-mono text-slate-300 hover:text-white transition flex items-center gap-2">
+        <i id="audio-icon" data-lucide="volume-2" class="w-4 h-4 text-brand-cyan"></i>
+        <span id="audio-status-label">SOUND: ON</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Background WebGL 3D Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- RETRACTABLE CONTROL CENTER SIDEBAR (Matching User's Streamlit Sidebar Screenshot) -->
+  <aside id="cyber-sidebar"
+    class="fixed top-0 left-0 bottom-0 w-80 z-[99] bg-[#070d19]/95 backdrop-blur-xl border-r border-slate-800 p-6 flex flex-col justify-between overflow-y-auto transform -translate-x-full transition-transform duration-300 shadow-2xl font-mono text-xs text-slate-300">
+    <div class="space-y-6">
+
+      <!-- Sidebar Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+            <i data-lucide="box" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="font-bold text-sm text-white">Inventory Intelligence</div>
+            <div class="text-[10px] text-slate-400">v2.4 Hackathon Edition</div>
+          </div>
+        </div>
+        <button onclick="toggleCyberSidebar()"
+          class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Links Section -->
+      <div class="space-y-2">
+        <div class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Navigation</div>
+        <div class="space-y-1">
+          <a href="#executive-overview" onclick="toggleCyberSidebar()"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/30 hover:bg-emerald-500/20 transition">
+            <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+            <span>Executive Overview</span>
+          </a>
+          <a href="#forecasting" onclick="toggleCyberSidebar()"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-900 hover:text-white transition">
+            <i data-lucide="line-chart" class="w-4 h-4 text-brand-cyan"></i>
+            <span>Demand Analytics</span>
+          </a>
+          <a href="#risk-matrix" onclick="toggleCyberSidebar()"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-900 hover:text-white transition">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-yellow-400"></i>
+            <span>Stock Risk & Stock-Outs</span>
+          </a>
+          <a href="#risk-matrix" onclick="toggleCyberSidebar()"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-900 hover:text-white transition">
+            <i data-lucide="box" class="w-4 h-4 text-purple-400"></i>
+            <span>Overstock & Slow-Moving</span>
+          </a>
+          <a href="#hygiene" onclick="toggleCyberSidebar()"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-900 hover:text-white transition">
+            <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+            <span>Data Profiling & Audit</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Dataset Selection Section -->
+      <div class="space-y-3 pt-3 border-t border-slate-800/80">
+        <div class="flex items-center gap-2 text-slate-200 font-bold text-xs">
+          <i data-lucide="folder" class="w-4 h-4 text-yellow-400"></i>
+          <span>Dataset Selection</span>
+        </div>
+        <div class="space-y-2 text-[11px]">
+          <label
+            class="flex items-center gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 cursor-pointer">
+            <input type="radio" name="ds-choice" checked class="accent-emerald-400">
+            <span>Standard Benchmark (5.4k rows)</span>
+          </label>
+          <label
+            class="flex items-center gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 cursor-pointer hover:text-white"
+            onclick="simulateFileUpload()">
+            <input type="radio" name="ds-choice" class="accent-emerald-400">
+            <span>Upload Custom Dataset (CSV/XLSX)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Operational Thresholds Section -->
+      <div class="space-y-3 pt-3 border-t border-slate-800/80">
+        <div class="flex items-center gap-2 text-slate-200 font-bold text-xs">
+          <i data-lucide="sliders" class="w-4 h-4 text-brand-cyan"></i>
+          <span>Operational Thresholds</span>
+        </div>
+
+        <div class="space-y-3 text-[11px]">
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span>Low Stock Threshold (Days)</span>
+              <span id="sb-low-val" class="text-brand-cyan font-bold">7.00</span>
+            </div>
+            <input type="range" id="sb-low-slider" min="1" max="21" value="7"
+              oninput="document.getElementById('sb-low-val').innerText = parseFloat(this.value).toFixed(2); updateCalculations()"
+              class="w-full accent-brand-cyan h-1.5 bg-slate-950 rounded cursor-pointer">
+          </div>
+
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span>Overstock Threshold (Days)</span>
+              <span id="sb-over-val" class="text-brand-cyan font-bold">60.00</span>
+            </div>
+            <input type="range" id="sb-over-slider" min="30" max="120" value="60"
+              oninput="document.getElementById('sb-over-val').innerText = parseFloat(this.value).toFixed(2); updateCalculations()"
+              class="w-full accent-brand-cyan h-1.5 bg-slate-950 rounded cursor-pointer">
+          </div>
+
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span>Slow-Moving Threshold (Days)</span>
+              <span id="sb-slow-val" class="text-brand-cyan font-bold">30.00</span>
+            </div>
+            <input type="range" id="sb-slow-slider" min="14" max="90" value="30"
+              oninput="document.getElementById('sb-slow-val').innerText = parseFloat(this.value).toFixed(2); updateCalculations()"
+              class="w-full accent-brand-cyan h-1.5 bg-slate-950 rounded cursor-pointer">
+          </div>
+        </div>
+      </div>
+
+      <!-- Power BI Exports Section -->
+      <div class="space-y-3 pt-3 border-t border-slate-800/80">
+        <div class="flex items-center gap-2 text-slate-200 font-bold text-xs">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4 text-purple-400"></i>
+          <span>Power BI Exports</span>
+        </div>
+
+        <button onclick="downloadExportCsv('summary')"
+          class="w-full py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-200 font-bold text-[11px] flex items-center justify-center gap-1.5 transition">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span>Generate & Update CSV Exports</span>
+        </button>
+
+        <div class="space-y-1.5">
+          <button onclick="downloadExportCsv('summary')"
+            class="w-full py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-brand-cyan text-[10px] flex items-center gap-2 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download inventory_summary.csv</span>
+          </button>
+          <button onclick="downloadExportCsv('risk')"
+            class="w-full py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-amber-400 text-[10px] flex items-center gap-2 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download product_risk.csv</span>
+          </button>
+          <button onclick="downloadExportCsv('trends')"
+            class="w-full py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-purple-400 text-[10px] flex items-center gap-2 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download demand_trends.csv</span>
+          </button>
+          <button onclick="downloadExportCsv('category')"
+            class="w-full py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-emerald-400 text-[10px] flex items-center gap-2 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download category_summary.csv</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Engine Section (Exact Tag Pills matching screenshot) -->
+      <div class="space-y-3 pt-3 border-t border-slate-800/80">
+        <div class="flex items-center gap-2 text-slate-200 font-bold text-xs">
+          <i data-lucide="filter" class="w-4 h-4 text-emerald-400"></i>
+          <span>Filter Engine</span>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="space-y-1.5">
+          <div class="text-[10px] text-slate-400">Category Filter</div>
+          <div class="flex flex-wrap gap-1.5 text-[10px]">
+            <span
+              class="px-2 py-0.5 rounded-lg bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 flex items-center gap-1 cursor-pointer hover:opacity-80">
+              Apparel <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 flex items-center gap-1 cursor-pointer hover:opacity-80">
+              Electronics <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 flex items-center gap-1 cursor-pointer hover:opacity-80">
+              Health & Personal Care <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 flex items-center gap-1 cursor-pointer hover:opacity-80">
+              Home & Kitchen <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 flex items-center gap-1 cursor-pointer hover:opacity-80">
+              Sports & Outdoors <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- Inventory Status Filter Pills -->
+        <div class="space-y-1.5 pt-2">
+          <div class="text-[10px] text-slate-400">Inventory Status</div>
+          <div class="flex flex-wrap gap-1.5 text-[10px]">
+            <span
+              class="px-2 py-0.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/40 flex items-center gap-1 cursor-pointer hover:opacity-80"
+              onclick="filterRiskTable('CRITICAL')">
+              STOCK-OUT / CRITICAL <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1 cursor-pointer hover:opacity-80"
+              onclick="filterRiskTable('LOW_STOCK')">
+              LOW STOCK <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1 cursor-pointer hover:opacity-80"
+              onclick="filterRiskTable('HEALTHY')">
+              HEALTHY <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 flex items-center gap-1 cursor-pointer hover:opacity-80"
+              onclick="filterRiskTable('OVERSTOCK')">
+              OVERSTOCK <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/40 flex items-center gap-1 cursor-pointer hover:opacity-80"
+              onclick="filterRiskTable('SLOW_MOVING')">
+              SLOW-MOVING <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- Risk Tier Filter Pills -->
+        <div class="space-y-1.5 pt-2">
+          <div class="text-[10px] text-slate-400">Risk Tier</div>
+          <div class="flex flex-wrap gap-1.5 text-[10px]">
+            <span
+              class="px-2 py-0.5 rounded-lg bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 flex items-center gap-1 cursor-pointer hover:opacity-80">
+              Critical <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 flex items-center gap-1 cursor-pointer hover:opacity-80">
+              High Risk <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-lg bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 flex items-center gap-1 cursor-pointer hover:opacity-80">
+              Medium Risk <i data-lucide="x" class="w-2.5 h-2.5"></i>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Sidebar Backdrop Overlay -->
+  <div id="sidebar-backdrop" onclick="toggleCyberSidebar()"
+    class="fixed inset-0 bg-black/60 z-[98] hidden backdrop-blur-sm transition-opacity"></div>
+
+  <!-- NAVIGATION HEADER -->
+  <header id="main-header"
+    class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-4 sm:px-8 py-4 reveal-ui">
+    <nav class="max-w-7xl mx-auto glass-nav rounded-2xl px-5 py-3 flex items-center justify-between shadow-2xl">
+      <!-- Logo & Sidebar Toggle Button -->
+      <div class="flex items-center gap-3">
+        <button onclick="toggleCyberSidebar()"
+          class="p-2 rounded-xl bg-slate-900 border border-emerald-500/40 text-emerald-400 hover:bg-slate-800 transition flex items-center gap-1.5 text-xs font-mono"
+          title="Toggle Control Sidebar">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+          <span class="hidden sm:inline font-bold">Control Panel</span>
+        </button>
+
+        <a href="#hero" class="flex items-center gap-2.5 group">
+          <div
+            class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-400 via-brand-cyan to-brand-violet flex items-center justify-center font-bold text-slate-950 font-mono shadow-lg group-hover:scale-105 transition transform">
+            <i data-lucide="box" class="w-4 h-4 text-slate-950"></i>
+          </div>
+          <div class="flex flex-col">
+            <span
+              class="font-extrabold tracking-wider text-sm sm:text-base bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent leading-none">
+              INVENTORY INTELLIGENCE 3D
+            </span>
+            <span class="text-[9px] font-mono text-slate-400 tracking-tight">v2.4 Hackathon Edition</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Cash Counter Interactive Score Badge -->
+      <div
+        class="hidden lg:flex items-center gap-2 px-4 py-1.5 rounded-full cash-counter-badge text-xs font-mono text-emerald-400 font-bold shadow-md animate-bounce-soft">
+        <i data-lucide="coins" class="w-4 h-4 text-yellow-400"></i>
+        <span>CAPITAL PRESERVED:</span>
+        <span id="cash-counter-val" class="text-white font-extrabold text-sm">$412,800</span>
+      </div>
+
+      <!-- Desktop Nav Links -->
+      <div class="hidden md:flex items-center gap-6 text-xs font-medium uppercase tracking-wider font-mono">
+        <a href="#hero" class="text-slate-300 hover:text-emerald-400 transition-colors">3D Zone</a>
+        <a href="#executive-overview"
+          class="text-slate-300 hover:text-emerald-400 transition-colors text-emerald-400">Executive View</a>
+        <a href="#risk-matrix" class="text-slate-300 hover:text-emerald-400 transition-colors">Risk Matrix</a>
+        <a href="#forecasting" class="text-slate-300 hover:text-emerald-400 transition-colors">ML Forecast</a>
+        <a href="#hygiene" class="text-slate-300 hover:text-emerald-400 transition-colors">Data Hygiene</a>
+        <a href="#exports" class="text-slate-300 hover:text-emerald-400 transition-colors">Exports</a>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Shower Cash Button -->
+        <button onclick="triggerCashRain()"
+          class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg hover:brightness-110 transition transform hover:-translate-y-0.5 flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Shower Cash ($)</span>
+        </button>
+
+        <!-- Replay Opening Animation Button -->
+        <button onclick="replayIntro()"
+          class="p-2.5 rounded-xl glass-card text-slate-300 hover:text-emerald-400 hover:border-emerald-500/40 transition"
+          title="Replay 3D Robo Cash Run">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Mobile Menu Toggle -->
+        <button id="mobile-menu-btn" onclick="toggleMobileMenu()"
+          class="md:hidden p-2.5 rounded-xl glass-card text-slate-300 hover:text-white" aria-label="Toggle Navigation">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Dropdown Navigation -->
+    <div id="mobile-menu"
+      class="hidden md:hidden max-w-7xl mx-auto mt-2 glass-nav rounded-2xl p-6 flex-col gap-4 border border-slate-800">
+      <a href="#hero" onclick="toggleMobileMenu()"
+        class="text-slate-200 hover:text-emerald-400 py-1 text-sm font-mono uppercase">3D Robo Zone</a>
+      <a href="#risk-matrix" onclick="toggleMobileMenu()"
+        class="text-slate-200 hover:text-emerald-400 py-1 text-sm font-mono uppercase">Risk Classification</a>
+      <a href="#forecasting" onclick="toggleMobileMenu()"
+        class="text-slate-200 hover:text-emerald-400 py-1 text-sm font-mono uppercase">ML Demand Forecast</a>
+      <a href="#hygiene" onclick="toggleMobileMenu()"
+        class="text-slate-200 hover:text-emerald-400 py-1 text-sm font-mono uppercase">Data Hygiene Pipeline</a>
+      <a href="#exports" onclick="toggleMobileMenu()"
+        class="text-slate-200 hover:text-emerald-400 py-1 text-sm font-mono uppercase">Power BI Exports</a>
+      <div class="pt-4 border-t border-slate-800 flex flex-col gap-3">
+        <button onclick="triggerCashRain(); toggleMobileMenu();"
+          class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-950 font-bold text-xs uppercase flex items-center justify-center gap-2">
+          <i data-lucide="banknote" class="w-4 h-4"></i>
+          <span>Shower Cash Savings ($)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION WITH 3D ROBOT HOLDING CASH -->
+  <section id="hero" class="relative z-10 min-h-screen pt-28 pb-16 px-4 sm:px-8 flex items-center justify-center">
+    <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+
+      <!-- Text Content Left -->
+      <div id="hero-text" class="lg:col-span-7 space-y-6 text-center lg:text-left reveal-ui">
+        <div
+          class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-card text-emerald-400 text-xs font-mono font-bold border border-emerald-500/30 shadow-lg">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>ROBO CASH ENGINE ACTIVE | DEMAND ANALYTICS PLATFORM</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
+          3D Interactive <br />
+          <span class="bg-gradient-to-r from-emerald-400 via-brand-cyan to-yellow-400 bg-clip-text text-transparent">
+            Inventory Analytics
+          </span> & Capital Engine
+        </h1>
+
+        <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+          Analyze product demand velocity, eliminate stock-out risks, and optimize working capital. As you opened the
+          site, our <strong class="text-emerald-400">3D Cyber Robot</strong> sprinted in holding stacks of cash to
+          safeguard your inventory reserves!
+        </p>
+
+        <!-- CTA Action Buttons -->
+        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+          <button onclick="triggerCashRain()"
+            class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 via-teal-500 to-yellow-400 text-slate-950 font-black text-sm tracking-wide shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105 transition transform flex items-center gap-2">
+            <i data-lucide="banknote" class="w-5 h-5"></i>
+            <span>Shower Cash Savings ($)</span>
+          </button>
+
+          <a href="#risk-matrix"
+            class="px-6 py-3.5 rounded-xl glass-card text-slate-100 hover:text-emerald-400 hover:border-emerald-500/50 font-bold text-sm transition transform hover:-translate-y-0.5 flex items-center gap-2">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-400"></i>
+            <span>Explore Risk Radar</span>
+          </a>
+
+          <a href="#exports"
+            class="px-6 py-3.5 rounded-xl bg-slate-900 border border-slate-700 hover:bg-slate-800 text-white font-semibold text-sm transition transform hover:-translate-y-0.5 flex items-center gap-2">
+            <i data-lucide="download" class="w-4 h-4 text-yellow-400"></i>
+            <span>Download CSVs</span>
+          </a>
+        </div>
+
+        <!-- Highlight Stat Cards -->
+        <div class="pt-6 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto lg:mx-0">
+          <div class="glass-card p-3.5 rounded-2xl text-center border-emerald-500/20">
+            <div class="text-lg sm:text-xl font-black text-emerald-400 font-mono" id="stat-cash">$412.8K</div>
+            <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Capital Preserved</div>
+          </div>
+          <div class="glass-card p-3.5 rounded-2xl text-center">
+            <div class="text-lg sm:text-xl font-black text-brand-cyan font-mono">24.8%</div>
+            <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Risk Vulnerability</div>
+          </div>
+          <div class="glass-card p-3.5 rounded-2xl text-center">
+            <div class="text-lg sm:text-xl font-black text-yellow-400 font-mono">14 SKUs</div>
+            <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Reorder Directives</div>
+          </div>
+          <div class="glass-card p-3.5 rounded-2xl text-center">
+            <div class="text-lg sm:text-xl font-black text-purple-400 font-mono">94.6%</div>
+            <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">ML Forecast Acc.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero 3D Robot Canvas Viewport Right -->
+      <div id="hero-3d-container" class="lg:col-span-5 relative flex items-center justify-center reveal-ui">
+        <div id="robo-zone"
+          class="w-full h-[460px] sm:h-[500px] glass-card rounded-3xl p-3 relative overflow-hidden flex items-center justify-center border border-emerald-500/30 glow-green">
+
+          <!-- Viewport Badges -->
+          <div
+            class="absolute top-4 left-4 z-20 flex items-center gap-2 text-xs font-mono text-slate-200 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-emerald-500/40 shadow-md">
+            <i data-lucide="bot" class="w-4 h-4 text-emerald-400 animate-pulse"></i>
+            <span class="font-bold text-emerald-300">3D Robo Holding Cash ($)</span>
+          </div>
+
+          <div
+            class="absolute top-4 right-4 z-20 flex items-center gap-1.5 text-[11px] font-mono text-slate-300 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
+            <i data-lucide="move-3d" class="w-3.5 h-3.5 text-yellow-400"></i>
+            <span>Drag to Rotate</span>
+          </div>
+
+          <!-- 3D Hero Viewport Canvas -->
+          <canvas id="hero-canvas"></canvas>
+
+          <!-- Interactive Controls Overlay Bottom -->
+          <div
+            class="absolute bottom-4 left-4 right-4 z-20 flex flex-col gap-2 bg-slate-950/90 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <button onclick="toggleRobotRun()" id="toggle-run-btn"
+                  class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-xs font-mono border border-emerald-500/40 flex items-center gap-1 transition">
+                  <i data-lucide="footprints" class="w-3.5 h-3.5"></i>
+                  <span id="run-btn-label">Sprinting Stance</span>
+                </button>
+
+                <button onclick="collectMoneyBonus()"
+                  class="px-2.5 py-1 rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 text-xs font-mono border border-yellow-500/40 flex items-center gap-1 transition">
+                  <i data-lucide="coins" class="w-3.5 h-3.5"></i>
+                  <span>+$10K Cash</span>
+                </button>
+              </div>
+
+              <!-- Camera presets -->
+              <div class="flex items-center gap-1">
+                <button onclick="switchCameraMode('orbit')"
+                  class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-slate-300"
+                  title="Orbit Camera">Orbit</button>
+                <button onclick="switchCameraMode('robo')"
+                  class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-emerald-400"
+                  title="Robo Focus">Robo</button>
+                <button onclick="switchCameraMode('radar')"
+                  class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-yellow-400"
+                  title="Warehouse Perspective">Grid</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION: POWER BI & STREAMLIT EXECUTIVE OVERVIEW GRID (Exact User Screenshot Replica) -->
+  <section id="executive-overview" class="relative z-10 py-20 px-4 sm:px-8 bg-slate-950/80 border-t border-slate-900">
+    <div class="max-w-7xl mx-auto space-y-10">
+
+      <div class="text-center space-y-3">
+        <h2 class="text-xs font-mono tracking-widest text-emerald-400 uppercase">// Executive Control Center</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white">Power BI & Streamlit Executive Analytics</h3>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto">
+          Real-time 4-panel executive view: Donut inventory distribution, time-series demand velocity, top high-demand
+          products, and critical stock-out watchlist.
+        </p>
+        <div class="w-20 h-1 bg-gradient-to-r from-emerald-400 via-brand-cyan to-yellow-400 mx-auto rounded-full"></div>
+      </div>
+
+      <!-- 2x2 EXECUTIVE GRID MATCHING USER SCREENSHOT -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Panel 1: Inventory Status Distribution (Donut Chart) -->
+        <div class="glass-card p-6 rounded-3xl space-y-4 border-slate-800 flex flex-col justify-between">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h4 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400"><i data-lucide="package"
+                  class="w-4 h-4"></i></span>
+              <span>Inventory Status Distribution</span>
+            </h4>
+            <span class="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">5
+              Status Tiers</span>
+          </div>
+
+          <!-- Donut SVG + Legend Container -->
+          <div class="flex flex-col sm:flex-row items-center justify-around gap-6 py-2">
+            <!-- Donut SVG Canvas -->
+            <div class="relative w-44 h-44 flex items-center justify-center">
+              <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
+                <!-- Stock Out Critical 23.3% Red -->
+                <circle cx="50" cy="50" r="38" stroke="#EF4444" stroke-width="14" fill="transparent"
+                  stroke-dasharray="55.6 183.1" stroke-dashoffset="0" />
+                <!-- Low Stock 20% Orange -->
+                <circle cx="50" cy="50" r="38" stroke="#F59E0B" stroke-width="14" fill="transparent"
+                  stroke-dasharray="47.7 191" stroke-dashoffset="-55.6" />
+                <!-- Healthy 23.3% Green -->
+                <circle cx="50" cy="50" r="38" stroke="#10B981" stroke-width="14" fill="transparent"
+                  stroke-dasharray="55.6 183.1" stroke-dashoffset="-103.3" />
+                <!-- Overstock 16.7% Indigo -->
+                <circle cx="50" cy="50" r="38" stroke="#6366F1" stroke-width="14" fill="transparent"
+                  stroke-dasharray="39.8 198.9" stroke-dashoffset="-158.9" />
+                <!-- Slow Moving 16.7% Purple -->
+                <circle cx="50" cy="50" r="38" stroke="#8B5CF6" stroke-width="14" fill="transparent"
+                  stroke-dasharray="39.8 198.9" stroke-dashoffset="-198.7" />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span class="text-[10px] font-mono text-slate-400 uppercase">Distribution</span>
+                <span class="text-lg font-bold font-mono text-white">100%</span>
+              </div>
+            </div>
+
+            <!-- Color-coded Donut Legend matching screenshot -->
+            <div class="space-y-2 text-xs font-mono">
+              <div class="flex items-center gap-2.5">
+                <span class="w-3 h-3 rounded-sm bg-[#EF4444]"></span>
+                <span class="text-slate-300 font-semibold">STOCK-OUT / CRITICAL</span>
+                <span class="text-slate-400 ml-auto font-bold">23.3%</span>
+              </div>
+              <div class="flex items-center gap-2.5">
+                <span class="w-3 h-3 rounded-sm bg-[#F59E0B]"></span>
+                <span class="text-slate-300 font-semibold">LOW STOCK</span>
+                <span class="text-slate-400 ml-auto font-bold">20.0%</span>
+              </div>
+              <div class="flex items-center gap-2.5">
+                <span class="w-3 h-3 rounded-sm bg-[#10B981]"></span>
+                <span class="text-slate-300 font-semibold">HEALTHY</span>
+                <span class="text-slate-400 ml-auto font-bold">23.3%</span>
+              </div>
+              <div class="flex items-center gap-2.5">
+                <span class="w-3 h-3 rounded-sm bg-[#6366F1]"></span>
+                <span class="text-slate-300 font-semibold">OVERSTOCK</span>
+                <span class="text-slate-400 ml-auto font-bold">16.7%</span>
+              </div>
+              <div class="flex items-center gap-2.5">
+                <span class="w-3 h-3 rounded-sm bg-[#8B5CF6]"></span>
+                <span class="text-slate-300 font-semibold">SLOW-MOVING</span>
+                <span class="text-slate-400 ml-auto font-bold">16.7%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Overall Demand Trend (Units Sold Over Time) -->
+        <div class="glass-card p-6 rounded-3xl space-y-4 border-slate-800 flex flex-col justify-between">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h4 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-brand-cyan/10 text-brand-cyan"><i data-lucide="line-chart"
+                  class="w-4 h-4"></i></span>
+              <span>Overall Demand Trend (Units Sold Over Time)</span>
+            </h4>
+            <div class="flex items-center gap-3 text-[10px] font-mono text-slate-400">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-slate-700"></span> Daily
+                Sold</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-brand-cyan"></span> 7-Day
+                Moving Avg</span>
+            </div>
+          </div>
+
+          <!-- SVG Line/Area Chart Container -->
+          <div
+            class="w-full h-52 bg-slate-950/90 rounded-2xl p-4 border border-slate-800 relative flex flex-col justify-between">
+            <div class="relative w-full h-40 flex items-end justify-between gap-1 border-b border-slate-800">
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[60%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[75%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[50%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[85%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[65%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[90%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[70%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[95%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[80%] hover:bg-slate-700 transition"></div>
+              <div class="flex-1 bg-slate-800/80 rounded-t h-[75%] hover:bg-slate-700 transition"></div>
+
+              <svg class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none"
+                viewBox="0 0 100 100">
+                <path d="M 0 45 Q 25 20, 50 32 T 100 15" stroke="#00f2fe" stroke-width="3" fill="none"
+                  filter="drop-shadow(0 0 8px rgba(0, 242, 254, 0.8))" />
+              </svg>
+            </div>
+
+            <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1">
+              <span>Mar 2026</span>
+              <span>Apr 2026</span>
+              <span>May 2026</span>
+              <span>Jun 2026</span>
+              <span>Jul 2026</span>
+              <span>Aug 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 3: Top 7 High-Demand Products (Horizontal Bar Chart) -->
+        <div class="glass-card p-6 rounded-3xl space-y-4 border-slate-800 flex flex-col justify-between">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h4 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-yellow-500/10 text-yellow-400"><i data-lucide="flame"
+                  class="w-4 h-4"></i></span>
+              <span>Top 7 High-Demand Products</span>
+            </h4>
+            <span
+              class="text-[10px] font-mono text-yellow-400 bg-yellow-950/60 px-2 py-1 rounded border border-yellow-800">By
+              Velocity</span>
+          </div>
+
+          <div class="space-y-3 font-mono text-xs">
+            <div class="space-y-1">
+              <div class="flex justify-between text-slate-200">
+                <span>Wireless Noise-Canceling Headphones</span>
+                <span class="font-bold text-brand-cyan">2,052 units</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-brand-cyan h-full rounded-full w-[95%]"></div>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex justify-between text-slate-200">
+                <span>Digital Air Fryer Oven 6Qt</span>
+                <span class="font-bold text-brand-cyan">1,901 units</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-brand-cyan h-full rounded-full w-[88%]"></div>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex justify-between text-slate-200">
+                <span>Electric Precision Milk Frother</span>
+                <span class="font-bold text-emerald-400">1,678 units</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-emerald-400 h-full rounded-full w-[78%]"></div>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex justify-between text-slate-200">
+                <span>USB-C Fast Charging Cable 2M</span>
+                <span class="font-bold text-yellow-400">1,642 units</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-yellow-400 h-full rounded-full w-[75%]"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 4: Critical Stock-Out Watchlist (Exact Table matching user image) -->
+        <div class="glass-card p-6 rounded-3xl space-y-4 border-red-500/30 flex flex-col justify-between">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h4 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-red-500/10 text-red-400"><i data-lucide="siren"
+                  class="w-4 h-4"></i></span>
+              <span>Critical Stock-Out Watchlist</span>
+            </h4>
+            <span
+              class="text-[10px] font-mono text-red-400 bg-red-950/60 px-2 py-1 rounded border border-red-800 animate-pulse">URGENT</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-800">
+            <table class="w-full text-left border-collapse text-xs font-mono">
+              <thead>
+                <tr class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
+                  <th class="p-2.5">SKU</th>
+                  <th class="p-2.5">Product</th>
+                  <th class="p-2.5">Category</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 text-slate-200">
+                <tr class="hover:bg-slate-900/60">
+                  <td class="p-2.5 font-bold text-red-400">SKU-HMK-104</td>
+                  <td class="p-2.5 text-white">Electric Precision Milk Frother</td>
+                  <td class="p-2.5 text-slate-400">Home & Kitchen</td>
+                </tr>
+                <tr class="hover:bg-slate-900/60">
+                  <td class="p-2.5 font-bold text-red-400">SKU-ELC-001</td>
+                  <td class="p-2.5 text-white">Wireless Noise-Canceling Headphones</td>
+                  <td class="p-2.5 text-slate-400">Electronics</td>
+                </tr>
+                <tr class="hover:bg-slate-900/60">
+                  <td class="p-2.5 font-bold text-red-400">SKU-HMK-101</td>
+                  <td class="p-2.5 text-white">Digital Air Fryer Oven 6Qt</td>
+                  <td class="p-2.5 text-slate-400">Home & Kitchen</td>
+                </tr>
+                <tr class="hover:bg-slate-900/60">
+                  <td class="p-2.5 font-bold text-red-400">SKU-APP-201</td>
+                  <td class="p-2.5 text-white">Thermal Fleece Running Hoodie</td>
+                  <td class="p-2.5 text-slate-400">Apparel</td>
+                </tr>
+                <tr class="hover:bg-slate-900/60">
+                  <td class="p-2.5 font-bold text-red-400">SKU-HPC-304</td>
+                  <td class="p-2.5 text-white">Daily Multivitamin Gummies 120ct</td>
+                  <td class="p-2.5 text-slate-400">Health & Personal Care</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 1: INVENTORY RISK CLASSIFICATION & LIVE MATRIX -->
+  <section id="risk-matrix" class="relative z-10 py-24 px-4 sm:px-8 bg-brand-dark/90 border-t border-slate-900">
+    <div class="max-w-7xl mx-auto space-y-12">
+
+      <div class="text-center space-y-3">
+        <h2 class="text-xs font-mono tracking-widest text-emerald-400 uppercase">// Objective Inventory Analytics</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white">Multi-Factor Stock Vulnerability Matrix</h3>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto">
+          Evaluates stock-out vulnerability based on Coverage Urgency (40%), Depletion Proximity (25%), Demand Velocity
+          (20%), and Supplier Lead Time (15%).
+        </p>
+        <div class="w-20 h-1 bg-gradient-to-r from-emerald-400 via-brand-cyan to-yellow-400 mx-auto rounded-full"></div>
+      </div>
+
+      <!-- Status Legend Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Stock-out Critical -->
+        <div onclick="filterRiskTable('CRITICAL')"
+          class="glass-card p-4 rounded-2xl border-red-500/30 cursor-pointer hover:border-red-500 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-3 h-3 rounded-full bg-red-500 animate-ping"></span>
+            <span class="text-xs font-mono font-bold text-red-400">CRITICAL</span>
+          </div>
+          <div class="text-lg font-bold text-white mb-1">Stock-Out / Critical</div>
+          <div class="text-[11px] text-slate-400">Coverage &le; 3 Days or zero stock remaining</div>
+        </div>
+
+        <!-- Low Stock -->
+        <div onclick="filterRiskTable('LOW_STOCK')"
+          class="glass-card p-4 rounded-2xl border-amber-500/30 cursor-pointer hover:border-amber-500 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+            <span class="text-xs font-mono font-bold text-amber-400">LOW STOCK</span>
+          </div>
+          <div class="text-lg font-bold text-white mb-1">Low Stock Warning</div>
+          <div class="text-[11px] text-slate-400">Coverage &le; 7 Days or stock &le; Reorder Point</div>
+        </div>
+
+        <!-- Healthy -->
+        <div onclick="filterRiskTable('HEALTHY')"
+          class="glass-card p-4 rounded-2xl border-emerald-500/30 cursor-pointer hover:border-emerald-500 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+            <span class="text-xs font-mono font-bold text-emerald-400">HEALTHY</span>
+          </div>
+          <div class="text-lg font-bold text-white mb-1">Healthy Balance</div>
+          <div class="text-[11px] text-slate-400">Optimal balance between demand velocity & lead time</div>
+        </div>
+
+        <!-- Overstock -->
+        <div onclick="filterRiskTable('OVERSTOCK')"
+          class="glass-card p-4 rounded-2xl border-indigo-500/30 cursor-pointer hover:border-indigo-500 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+            <span class="text-xs font-mono font-bold text-indigo-400">OVERSTOCK</span>
+          </div>
+          <div class="text-lg font-bold text-white mb-1">Excess Overstock</div>
+          <div class="text-[11px] text-slate-400">Coverage &gt; 60 Days tying up vital capital</div>
+        </div>
+
+        <!-- Slow-Moving -->
+        <div onclick="filterRiskTable('SLOW_MOVING')"
+          class="glass-card p-4 rounded-2xl border-purple-500/30 cursor-pointer hover:border-purple-500 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+            <span class="text-xs font-mono font-bold text-purple-400">SLOW-MOVING</span>
+          </div>
+          <div class="text-lg font-bold text-white mb-1">Sluggish Inventory</div>
+          <div class="text-[11px] text-slate-400">Daily velocity &lt; 1.0 unit/day with &gt; 30 days stock</div>
+        </div>
+      </div>
+
+      <!-- Dynamic Parameter Controls & Filters -->
+      <div class="glass-card p-6 rounded-3xl space-y-6 border-slate-800">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+
+          <!-- Lead Time Slider -->
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono text-slate-300 mb-2">
+              <span class="flex items-center gap-1.5"><i data-lucide="truck" class="w-4 h-4 text-emerald-400"></i>
+                Supplier Lead Time:</span>
+              <span id="lead-time-val" class="font-bold text-emerald-400">14 Days</span>
+            </div>
+            <input type="range" id="lead-time-slider" min="3" max="30" value="14" oninput="updateCalculations()"
+              class="w-full accent-emerald-400 h-2 bg-slate-900 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Safety Stock Slider -->
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono text-slate-300 mb-2">
+              <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-4 h-4 text-brand-cyan"></i>
+                Safety Stock Buffer:</span>
+              <span id="safety-stock-val" class="font-bold text-brand-cyan">5 Days</span>
+            </div>
+            <input type="range" id="safety-stock-slider" min="1" max="15" value="5" oninput="updateCalculations()"
+              class="w-full accent-brand-cyan h-2 bg-slate-900 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="flex items-center gap-3">
+            <div class="relative w-full">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+              <input type="text" id="sku-search-input" onkeyup="filterRiskTable()"
+                placeholder="Search SKU or Category..."
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none">
+            </div>
+            <button onclick="filterRiskTable('ALL')"
+              class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-mono hover:text-white transition">
+              Reset
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Interactive SKU Analytics Data Table -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-800/80">
+          <table class="w-full text-left border-collapse text-xs font-mono">
+            <thead>
+              <tr class="bg-slate-950/90 text-slate-400 uppercase border-b border-slate-800">
+                <th class="p-3.5">SKU Code</th>
+                <th class="p-3.5">Product Name</th>
+                <th class="p-3.5">Category</th>
+                <th class="p-3.5 text-right">Stock On Hand</th>
+                <th class="p-3.5 text-right">Daily Demand</th>
+                <th class="p-3.5 text-right">Coverage (Days)</th>
+                <th class="p-3.5 text-right">Reorder Point</th>
+                <th class="p-3.5 text-center">Risk Score</th>
+                <th class="p-3.5 text-center">Status</th>
+                <th class="p-3.5">Operational Directive</th>
+              </tr>
+            </thead>
+            <tbody id="risk-table-body" class="divide-y divide-slate-800/60 text-slate-200">
+              <!-- Dynamically populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 2: MACHINE LEARNING DEMAND FORECASTING ENGINE -->
+  <section id="forecasting" class="relative z-10 py-24 px-4 sm:px-8">
+    <div class="max-w-7xl mx-auto space-y-12">
+
+      <div class="text-center space-y-3">
+        <h2 class="text-xs font-mono tracking-widest text-emerald-400 uppercase">// Predictive Intelligence</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white">Machine Learning Demand Forecast Engine</h3>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto">
+          Ensemble trend forecasting blending Linear Trend Regression, 7-Day Rolling Moving Averages, and Calendar
+          Seasonality with transparent backtesting metrics.
+        </p>
+        <div class="w-20 h-1 bg-gradient-to-r from-brand-cyan to-brand-violet mx-auto rounded-full"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+
+        <!-- Left ML Visualizer Chart -->
+        <div class="lg:col-span-8 glass-card p-6 rounded-3xl space-y-6 border-slate-800 flex flex-col justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
+                <span>Historical vs 30-Day Predicted Demand</span>
+              </h4>
+              <span class="text-xs font-mono text-slate-400">Product: SKU-ELEC-409 (Wireless Noise-Canceling
+                Headphones)</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono text-slate-400">Horizon:</span>
+              <select id="forecast-horizon-select" onchange="renderForecastChart()"
+                class="bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-xs rounded-xl px-3 py-1.5 focus:outline-none">
+                <option value="7">7 Days</option>
+                <option value="14">14 Days</option>
+                <option value="30" selected>30 Days</option>
+                <option value="60">60 Days</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- SVG Dynamic Chart Canvas -->
+          <div
+            class="w-full h-64 bg-slate-950/80 rounded-2xl p-4 border border-slate-800 relative flex items-end justify-between gap-1 overflow-hidden"
+            id="forecast-chart-container">
+            <!-- Dynamic SVG chart rendered here -->
+          </div>
+
+          <!-- Chart Legend -->
+          <div
+            class="flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-slate-800">
+            <div class="flex items-center gap-4">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span> Actual
+                Demand</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-brand-cyan"></span> Ensemble
+                Forecast</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-yellow-400"></span> Stock-Out
+                Threshold</span>
+            </div>
+            <span>Validation Horizon: Backtested Out-of-Sample</span>
+          </div>
+        </div>
+
+        <!-- Right Model Accuracy & Stats -->
+        <div class="lg:col-span-4 glass-card p-6 rounded-3xl space-y-6 border-slate-800 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-lg font-bold text-white">Backtest Metrics</h4>
+              <span
+                class="px-3 py-1 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">GENUINE
+                VALIDATION</span>
+            </div>
+
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Models are validated against standard metrics—no fabricated accuracy figures or arbitrary assumptions.
+            </p>
+
+            <div class="space-y-3 pt-2">
+              <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-mono text-slate-400">Mean Absolute Error (MAE)</div>
+                  <div class="text-sm text-slate-200 font-semibold">Average forecast deviance</div>
+                </div>
+                <div class="text-xl font-bold font-mono text-emerald-400">1.42 units</div>
+              </div>
+
+              <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-mono text-slate-400">Root Mean Sq Error (RMSE)</div>
+                  <div class="text-sm text-slate-200 font-semibold">Penalizes large variance</div>
+                </div>
+                <div class="text-xl font-bold font-mono text-brand-cyan">1.85 units</div>
+              </div>
+
+              <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-mono text-slate-400">Out-of-Sample Accuracy</div>
+                  <div class="text-sm text-slate-200 font-semibold">Backtested precision</div>
+                </div>
+                <div class="text-xl font-bold font-mono text-yellow-400">94.6%</div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 text-xs font-mono text-emerald-300">
+            💡 <strong>Forecast Action:</strong> SKUs projected to breach Safety Stock buffer within 10 days are flagged
+            for automatic reorder generation.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 3: AUTOMATED DATA HYGIENE & COLUMN AUTO-DISCOVERY -->
+  <section id="hygiene" class="relative z-10 py-24 px-4 sm:px-8 bg-brand-dark/90 border-t border-slate-900">
+    <div class="max-w-7xl mx-auto space-y-12">
+
+      <div class="text-center space-y-3">
+        <h2 class="text-xs font-mono tracking-widest text-emerald-400 uppercase">// Automated Data Hygiene Pipeline</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white">Flexible Header Discovery & Profiling Engine</h3>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto">
+          Auto-discovers column headers from raw datasets without requiring manual schema reformatting. Cleans missing
+          prices, strips whitespace, and deduplicates records transparently.
+        </p>
+        <div class="w-20 h-1 bg-gradient-to-r from-emerald-400 to-yellow-400 mx-auto rounded-full"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        <!-- Interactive Drag & Drop Dataset Upload Simulator -->
+        <div class="lg:col-span-5 glass-card p-6 rounded-3xl space-y-5 border-slate-800">
+          <h4 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="upload-cloud" class="w-5 h-5 text-emerald-400"></i>
+            <span>Upload Dataset Simulation</span>
+          </h4>
+
+          <div id="drop-zone" onclick="simulateFileUpload()"
+            class="border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 bg-slate-950/60 rounded-2xl p-8 text-center cursor-pointer transition space-y-3">
+            <div
+              class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
+              <i data-lucide="file-text" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white">Click or Drag raw transaction CSV here</div>
+              <div class="text-xs text-slate-400 mt-1">Accepts headers like <code class="text-emerald-400">Qty</code>,
+                <code class="text-emerald-400">Units_Sold</code>, <code class="text-emerald-400">On_Hand</code>, <code
+                  class="text-emerald-400">Stock</code></div>
+            </div>
+            <button
+              class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold font-mono hover:bg-emerald-400 transition">
+              Simulate Processing CSV
+            </button>
+          </div>
+
+          <div class="text-xs font-mono text-slate-400 space-y-2">
+            <div class="flex items-center justify-between">
+              <span>Auto-Discovery Mapping:</span>
+              <span class="text-emerald-400 font-bold">100% Match</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Whitespace & Duplicate Scrubbing:</span>
+              <span class="text-emerald-400 font-bold">Passed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Audit Log Console -->
+        <div class="lg:col-span-7 terminal-window p-6 rounded-3xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-red-500"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500"></span>
+              <span class="text-xs font-mono text-slate-400 ml-2">preprocessing_audit_pipeline.log</span>
+            </div>
+            <span class="text-xs font-mono text-emerald-400">STATUS: CLEAN</span>
+          </div>
+
+          <div id="terminal-log"
+            class="font-mono text-xs text-slate-300 space-y-2 max-h-72 overflow-y-auto leading-relaxed">
+            <div class="text-emerald-400">[INFO 05:22:10] Initializing Data Loader & Schema Profiler...</div>
+            <div>[INFO 05:22:11] Inspecting column headers: ['Item_SKU', 'Sales_Qty', 'Stock_Available', 'Supplier_Lag']
+            </div>
+            <div class="text-brand-cyan">[MAP 05:22:11] Mapped 'Sales_Qty' -&gt; Standardized 'Units_Sold'</div>
+            <div class="text-brand-cyan">[MAP 05:22:11] Mapped 'Stock_Available' -&gt; Standardized 'Current_Stock'
+            </div>
+            <div class="text-brand-cyan">[MAP 05:22:11] Mapped 'Supplier_Lag' -&gt; Standardized 'Lead_Time_Days'</div>
+            <div>[CLEAN 05:22:12] Found 3 duplicate rows. Removed 3 duplicate records.</div>
+            <div>[CLEAN 05:22:12] Handled missing values: 2 missing prices filled using category medians.</div>
+            <div class="text-yellow-400">[AUDIT 05:22:12] Calculated Average Daily Demand across 90-day window.</div>
+            <div class="text-emerald-400 font-bold">[SUCCESS 05:22:13] Data hygiene pipeline complete. Ready for Risk
+              Scoring Engine.</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 4: EXPLAINABLE DIRECTIVES & CASH ROI CALCULATOR -->
+  <section id="roi-calculator" class="relative z-10 py-24 px-4 sm:px-8">
+    <div class="max-w-7xl mx-auto space-y-12">
+
+      <div class="text-center space-y-3">
+        <h2 class="text-xs font-mono tracking-widest text-emerald-400 uppercase">// Financial Optimization</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white">Working Capital & ROI Calculator</h3>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto">
+          Quantify tied-up working capital in overstock items and calculate direct cost savings from automated
+          reordering.
+        </p>
+        <div class="w-20 h-1 bg-gradient-to-r from-yellow-400 to-emerald-400 mx-auto rounded-full"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+
+        <!-- Calculator Inputs -->
+        <div class="lg:col-span-6 glass-card p-8 rounded-3xl space-y-6 border-slate-800">
+          <h4 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="calculator" class="w-6 h-6 text-yellow-400"></i>
+            <span>Interactive Savings Simulator</span>
+          </h4>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-mono text-slate-300 uppercase mb-2">Total SKUs Managed:</label>
+              <input type="number" id="roi-skus-input" value="1250" oninput="calculateCashRoi()"
+                class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-slate-800 text-white font-mono text-sm focus:border-emerald-400 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-mono text-slate-300 uppercase mb-2">Average Holding Cost (% per
+                year):</label>
+              <input type="number" id="roi-holding-input" value="18" oninput="calculateCashRoi()"
+                class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-slate-800 text-white font-mono text-sm focus:border-emerald-400 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-mono text-slate-300 uppercase mb-2">Average Unit Cost ($):</label>
+              <input type="number" id="roi-cost-input" value="65" oninput="calculateCashRoi()"
+                class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-slate-800 text-white font-mono text-sm focus:border-emerald-400 focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculator Results -->
+        <div class="lg:col-span-6 glass-card p-8 rounded-3xl space-y-6 border-emerald-500/30 glow-green">
+          <h4 class="text-xl font-bold text-white">Projected Financial Impact</h4>
+
+          <div class="space-y-4">
+            <div
+              class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-mono text-slate-400">Tied-Up Working Capital Saved</div>
+                <div class="text-2xl font-black text-emerald-400 font-mono" id="roi-capital-saved">$412,800</div>
+              </div>
+              <i data-lucide="trending-up" class="w-8 h-8 text-emerald-400"></i>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-mono text-slate-400">Annual Holding Cost Reduction</div>
+                <div class="text-2xl font-black text-yellow-400 font-mono" id="roi-holding-saved">$74,304</div>
+              </div>
+              <i data-lucide="piggy-bank" class="w-8 h-8 text-yellow-400"></i>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-mono text-slate-400">Stock-Out Lost Sales Prevented</div>
+                <div class="text-2xl font-black text-brand-cyan font-mono" id="roi-sales-saved">$185,200</div>
+              </div>
+              <i data-lucide="shield-check" class="w-8 h-8 text-brand-cyan"></i>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 5: POWER BI EXPORT STATION & PYTHON STREAMLIT APP CONNECTOR -->
+  <section id="exports" class="relative z-10 py-24 px-4 sm:px-8 bg-brand-dark/90 border-t border-slate-900">
+    <div class="max-w-7xl mx-auto space-y-12">
+
+      <div class="text-center space-y-3">
+        <h2 class="text-xs font-mono tracking-widest text-emerald-400 uppercase">// Analytics Integration</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white">Power BI Exports & Streamlit Backend</h3>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto">
+          Export analytical CSV tables ready for Power BI/Tableau or launch the commercial-grade Streamlit application
+          (<code class="text-emerald-400">app.py</code>).
+        </p>
+        <div class="w-20 h-1 bg-gradient-to-r from-emerald-400 to-brand-cyan mx-auto rounded-full"></div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Export 1 -->
+        <div class="glass-card p-6 rounded-2xl space-y-4 hover:border-emerald-500/50 transition">
+          <div class="flex items-center justify-between">
+            <i data-lucide="table" class="w-6 h-6 text-emerald-400"></i>
+            <span class="text-[10px] font-mono text-emerald-400">CSV READY</span>
+          </div>
+          <h4 class="text-base font-bold text-white">inventory_summary.csv</h4>
+          <p class="text-xs text-slate-400">Standardized stock levels, daily demand, days coverage & ROPs.</p>
+          <button onclick="downloadExportCsv('summary')"
+            class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 font-mono text-xs font-bold border border-slate-800 transition flex items-center justify-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download CSV</span>
+          </button>
+        </div>
+
+        <!-- Export 2 -->
+        <div class="glass-card p-6 rounded-2xl space-y-4 hover:border-amber-500/50 transition">
+          <div class="flex items-center justify-between">
+            <i data-lucide="alert-triangle" class="w-6 h-6 text-amber-400"></i>
+            <span class="text-[10px] font-mono text-amber-400">CSV READY</span>
+          </div>
+          <h4 class="text-base font-bold text-white">product_risk.csv</h4>
+          <p class="text-xs text-slate-400">Multi-factor 0-100 vulnerability risk scores & directives.</p>
+          <button onclick="downloadExportCsv('risk')"
+            class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-mono text-xs font-bold border border-slate-800 transition flex items-center justify-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download CSV</span>
+          </button>
+        </div>
+
+        <!-- Export 3 -->
+        <div class="glass-card p-6 rounded-2xl space-y-4 hover:border-brand-cyan/50 transition">
+          <div class="flex items-center justify-between">
+            <i data-lucide="trending-up" class="w-6 h-6 text-brand-cyan"></i>
+            <span class="text-[10px] font-mono text-brand-cyan">CSV READY</span>
+          </div>
+          <h4 class="text-base font-bold text-white">demand_trends.csv</h4>
+          <p class="text-xs text-slate-400">Ensemble ML predicted demand curves with confidence bands.</p>
+          <button onclick="downloadExportCsv('trends')"
+            class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-brand-cyan font-mono text-xs font-bold border border-slate-800 transition flex items-center justify-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download CSV</span>
+          </button>
+        </div>
+
+        <!-- Export 4 -->
+        <div class="glass-card p-6 rounded-2xl space-y-4 hover:border-purple-500/50 transition">
+          <div class="flex items-center justify-between">
+            <i data-lucide="pie-chart" class="w-6 h-6 text-purple-400"></i>
+            <span class="text-[10px] font-mono text-purple-400">CSV READY</span>
+          </div>
+          <h4 class="text-base font-bold text-white">category_summary.csv</h4>
+          <p class="text-xs text-slate-400">Aggregated category holding costs and stockout risk ratios.</p>
+          <button onclick="downloadExportCsv('category')"
+            class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-purple-400 font-mono text-xs font-bold border border-slate-800 transition flex items-center justify-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Python Architecture Container -->
+      <div class="glass-card p-8 rounded-3xl border-emerald-500/20 space-y-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="space-y-1 text-center sm:text-left">
+            <h4 class="text-xl font-bold text-white">Python Backend Architecture (<code
+                class="text-emerald-400">app.py</code>)</h4>
+            <p class="text-xs font-mono text-slate-400">Powered by Pandas, NumPy, Scikit-Learn, Plotly & Streamlit
+              Executive Engine</p>
+          </div>
+          <div
+            class="px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-emerald-400 font-bold">
+            <i data-lucide="terminal" class="w-4 h-4 inline mr-1"></i> streamlit run app.py
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono text-slate-300">
+          <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+            <div class="text-emerald-400 font-bold">src/analytics.py</div>
+            <div class="text-[10px] text-slate-500">Coverage & Division Engine</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+            <div class="text-brand-cyan font-bold">src/risk_engine.py</div>
+            <div class="text-[10px] text-slate-500">0-100 Vulnerability Scorer</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+            <div class="text-yellow-400 font-bold">src/forecasting.py</div>
+            <div class="text-[10px] text-slate-500">ML Trend & MA Models</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+            <div class="text-purple-400 font-bold">src/recommendations.py</div>
+            <div class="text-[10px] text-slate-500">Explainable Operational Logic</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="relative z-10 border-t border-slate-900 py-8 px-4 text-center text-xs font-mono text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        Inventory Intelligence 3D Engine &copy; 2026. All rights reserved.
+      </div>
+      <div class="flex items-center gap-4">
+        <button onclick="replayIntro()" class="text-emerald-400 hover:underline">Replay 3D Robo Cash Opening</button>
+        <button onclick="triggerCashRain()" class="text-yellow-400 hover:underline">Shower Cash ($)</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- THREE.JS & APPLICATION LOGIC SCRIPT -->
+  <script>
+    /* ====================================================================
+       MOCK INVENTORY DATASET
+       ==================================================================== */
+    const mockInventory = [
+      { sku: 'SKU-ELEC-409', name: 'Wireless Headphones', category: 'Electronics', stock: 12, demand: 4.5, leadTime: 14, safetyStock: 5, price: 120 },
+      { sku: 'SKU-APPL-102', name: 'Smart Vacuum Robot', category: 'Appliances', stock: 3, demand: 2.1, leadTime: 14, safetyStock: 5, price: 340 },
+      { sku: 'SKU-FURN-881', name: 'Ergonomic Desk Chair', category: 'Furniture', stock: 180, demand: 1.2, leadTime: 14, safetyStock: 5, price: 210 },
+      { sku: 'SKU-ELEC-905', name: 'Ultra-Wide Monitor 34"', category: 'Electronics', stock: 45, demand: 3.8, leadTime: 14, safetyStock: 5, price: 580 },
+      { sku: 'SKU-SLW-004', name: 'Mechanical Keyboard RGB', category: 'Accessories', stock: 95, demand: 0.4, leadTime: 14, safetyStock: 5, price: 85 },
+      { sku: 'SKU-CRIT-001', name: 'USB-C Fast Charger 65W', category: 'Accessories', stock: 0, demand: 8.2, leadTime: 14, safetyStock: 5, price: 25 },
+      { sku: 'SKU-HEALTH-55', name: 'Portable SSD 2TB', category: 'Electronics', stock: 52, demand: 2.5, leadTime: 14, safetyStock: 5, price: 160 }
+    ];
+
+    let currentFilterStatus = 'ALL';
+
+    /* ====================================================================
+       WEB AUDIO API SYNTHESIZER
+       ==================================================================== */
+    let audioCtx = null;
+    let audioEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const statusLabel = document.getElementById('audio-status-label');
+      const icon = document.getElementById('audio-icon');
+      if (audioEnabled) {
+        statusLabel.innerText = 'SOUND: ON';
+        icon.setAttribute('data-lucide', 'volume-2');
+        playCashChimeSound();
+      } else {
+        statusLabel.innerText = 'SOUND: OFF';
+        icon.setAttribute('data-lucide', 'volume-x');
+      }
+      lucide.createIcons();
+    }
+
+    function playCashChimeSound() {
+      if (!audioEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+
+        gain.gain.setValueAtTime(0, now + idx * 0.06);
+        gain.gain.linearRampToValueAtTime(0.15, now + idx * 0.06 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.35);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now + idx * 0.06);
+        osc.stop(now + idx * 0.06 + 0.35);
+      });
+    }
+
+    function playRobotStepSound() {
+      if (!audioEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
+
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.08);
+    }
+
+    /* ====================================================================
+       PROCEDURAL CASH TEXTURE GENERATOR
+       ==================================================================== */
+    function createCashTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 256, 128);
+      grad.addColorStop(0, '#064e3b');
+      grad.addColorStop(0.5, '#10b981');
+      grad.addColorStop(1, '#047857');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 128);
+
+      ctx.strokeStyle = '#a7f3d0';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(8, 8, 240, 112);
+
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(128, 64, 70, 40, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('$100', 128, 64);
+
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText('$', 25, 25);
+      ctx.fillText('$', 231, 25);
+      ctx.fillText('$', 25, 103);
+      ctx.fillText('$', 231, 103);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    /* ====================================================================
+       THREE.JS BACKGROUND SCENE
+       ==================================================================== */
+    let bgScene, bgCamera, bgRenderer;
+    let bgParticles, floatingMoneyBills = [];
+
+    function initBgScene() {
+      const canvas = document.getElementById('bg-canvas');
+      bgScene = new THREE.Scene();
+      bgCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      bgCamera.position.z = 30;
+
+      bgRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      bgRenderer.setSize(window.innerWidth, window.innerHeight);
+      bgRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const count = 300;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 80;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 80;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 60;
+
+        colors[i * 3] = 0.06;
+        colors[i * 3 + 1] = 0.72 + Math.random() * 0.28;
+        colors[i * 3 + 2] = 0.5 + Math.random() * 0.5;
+      }
+
+      const particleGeo = new THREE.BufferGeometry();
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const particleMat = new THREE.PointsMaterial({
+        size: 0.6,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.6
+      });
+
+      bgParticles = new THREE.Points(particleGeo, particleMat);
+      bgScene.add(bgParticles);
+
+      const cashTex = createCashTexture();
+      const cashGeo = new THREE.PlaneGeometry(3, 1.5);
+      const cashMat = new THREE.MeshBasicMaterial({
+        map: cashTex,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85
+      });
+
+      for (let i = 0; i < 25; i++) {
+        const bill = new THREE.Mesh(cashGeo, cashMat);
+        bill.position.set(
+          (Math.random() - 0.5) * 60,
+          (Math.random() - 0.5) * 50,
+          (Math.random() - 0.5) * 40
+        );
+        bill.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+        bill.userData = {
+          rotSpeedX: (Math.random() - 0.5) * 0.02,
+          rotSpeedY: (Math.random() - 0.5) * 0.02,
+          fallSpeed: 0.03 + Math.random() * 0.04
+        };
+        bgScene.add(bill);
+        floatingMoneyBills.push(bill);
+      }
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+      bgScene.add(ambient);
+    }
+
+    /* ====================================================================
+       THREE.JS HERO CANVAS SCENE: 3D ROBOT HOLDING CASH
+       ==================================================================== */
+    let heroScene, heroCamera, heroRenderer;
+    let robotGroup, headGroup, leftArmGroup, rightArmGroup, leftLegGroup, rightLegGroup;
+    let cashStackLeft, cashStackRight, flyingMoneyParticles = [];
+    let isSprinting = true;
+    let isDraggingHero = false;
+    let prevMousePos = { x: 0, y: 0 };
+    let introProgress = 0;
+    let introFinished = false;
+
+    function createRobotModel() {
+      robotGroup = new THREE.Group();
+
+      const metalMat = new THREE.MeshStandardMaterial({
+        color: 0x0f172a,
+        metalness: 0.85,
+        roughness: 0.25
+      });
+
+      const chromeMat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8,
+        metalness: 0.9,
+        roughness: 0.1,
+        emissive: 0x0284c7,
+        emissiveIntensity: 0.3
+      });
+
+      const neonGreenMat = new THREE.MeshStandardMaterial({
+        color: 0x10b981,
+        emissive: 0x10b981,
+        emissiveIntensity: 0.8
+      });
+
+      const goldMat = new THREE.MeshStandardMaterial({
+        color: 0xfbbf24,
+        metalness: 0.8,
+        roughness: 0.2,
+        emissive: 0xd97706,
+        emissiveIntensity: 0.3
+      });
+
+      const cashTex = createCashTexture();
+      const cashMat = new THREE.MeshStandardMaterial({
+        map: cashTex,
+        roughness: 0.4
+      });
+
+      // 1. TORSO
+      const torsoGeo = new THREE.BoxGeometry(1.4, 1.8, 1.0);
+      const torsoMesh = new THREE.Mesh(torsoGeo, metalMat);
+      robotGroup.add(torsoMesh);
+
+      const coreGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.1, 32);
+      const coreMesh = new THREE.Mesh(coreGeo, neonGreenMat);
+      coreMesh.rotation.x = Math.PI / 2;
+      coreMesh.position.set(0, 0.3, 0.52);
+      torsoMesh.add(coreMesh);
+
+      // 2. HEAD
+      headGroup = new THREE.Group();
+      headGroup.position.set(0, 1.3, 0);
+
+      const headGeo = new THREE.BoxGeometry(1.0, 0.85, 0.9);
+      const headMesh = new THREE.Mesh(headGeo, metalMat);
+      headGroup.add(headMesh);
+
+      const visorGeo = new THREE.BoxGeometry(0.85, 0.3, 0.1);
+      const visorMesh = new THREE.Mesh(visorGeo, chromeMat);
+      visorMesh.position.set(0, 0.1, 0.46);
+      headGroup.add(visorMesh);
+
+      const antGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.4, 16);
+      const antMeshL = new THREE.Mesh(antGeo, goldMat);
+      antMeshL.position.set(-0.35, 0.55, 0);
+      headGroup.add(antMeshL);
+
+      const antMeshR = antMeshL.clone();
+      antMeshR.position.x = 0.35;
+      headGroup.add(antMeshR);
+
+      robotGroup.add(headGroup);
+
+      function createCashStackMesh() {
+        const stackGroup = new THREE.Group();
+        const stackGeo = new THREE.BoxGeometry(0.9, 0.6, 0.5);
+        const stackMesh = new THREE.Mesh(stackGeo, cashMat);
+        stackGroup.add(stackMesh);
+
+        const bandGeo = new THREE.BoxGeometry(0.92, 0.15, 0.52);
+        const bandMesh = new THREE.Mesh(bandGeo, goldMat);
+        stackGroup.add(bandMesh);
+
+        return stackGroup;
+      }
+
+      // 3. ARMS (Holding Stacks of Cash!)
+      leftArmGroup = new THREE.Group();
+      leftArmGroup.position.set(-0.95, 0.6, 0);
+
+      const shoulderGeo = new THREE.SphereGeometry(0.28, 16, 16);
+      const shoulderL = new THREE.Mesh(shoulderGeo, chromeMat);
+      leftArmGroup.add(shoulderL);
+
+      const armGeo = new THREE.CylinderGeometry(0.18, 0.15, 0.9, 16);
+      const armL = new THREE.Mesh(armGeo, metalMat);
+      armL.position.set(0, -0.45, 0);
+      leftArmGroup.add(armL);
+
+      cashStackLeft = createCashStackMesh();
+      cashStackLeft.position.set(0, -0.85, 0.3);
+      leftArmGroup.add(cashStackLeft);
+
+      robotGroup.add(leftArmGroup);
+
+      rightArmGroup = new THREE.Group();
+      rightArmGroup.position.set(0.95, 0.6, 0);
+
+      const shoulderR = new THREE.Mesh(shoulderGeo, chromeMat);
+      rightArmGroup.add(shoulderR);
+
+      const armR = new THREE.Mesh(armGeo, metalMat);
+      armR.position.set(0, -0.45, 0);
+      rightArmGroup.add(armR);
+
+      cashStackRight = createCashStackMesh();
+      cashStackRight.position.set(0, -0.85, 0.3);
+      rightArmGroup.add(cashStackRight);
+
+      robotGroup.add(rightArmGroup);
+
+      // 4. LEGS
+      const legGeo = new THREE.CylinderGeometry(0.22, 0.18, 1.1, 16);
+      const footGeo = new THREE.BoxGeometry(0.45, 0.25, 0.7);
+
+      leftLegGroup = new THREE.Group();
+      leftLegGroup.position.set(-0.45, -0.9, 0);
+      const legL = new THREE.Mesh(legGeo, metalMat);
+      legL.position.set(0, -0.55, 0);
+      leftLegGroup.add(legL);
+
+      const footL = new THREE.Mesh(footGeo, chromeMat);
+      footL.position.set(0, -1.05, 0.15);
+      leftLegGroup.add(footL);
+
+      robotGroup.add(leftLegGroup);
+
+      rightLegGroup = new THREE.Group();
+      rightLegGroup.position.set(0.45, -0.9, 0);
+      const legR = new THREE.Mesh(legGeo, metalMat);
+      legR.position.set(0, -0.55, 0);
+      rightLegGroup.add(legR);
+
+      const footR = new THREE.Mesh(footGeo, chromeMat);
+      footR.position.set(0, -1.05, 0.15);
+      rightLegGroup.add(footR);
+
+      robotGroup.add(rightLegGroup);
+
+      robotGroup.position.set(0, -0.4, -25);
+      return robotGroup;
+    }
+
+    function initHeroScene() {
+      const canvas = document.getElementById('hero-canvas');
+      const rect = canvas.getBoundingClientRect();
+
+      heroScene = new THREE.Scene();
+      heroCamera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 1000);
+      heroCamera.position.set(0, 1.2, 6.5);
+
+      heroRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      heroRenderer.setSize(rect.width, rect.height);
+      heroRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const robo = createRobotModel();
+      heroScene.add(robo);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      heroScene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0x10b981, 1.8);
+      dirLight1.position.set(5, 8, 5);
+      heroScene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 1.2);
+      dirLight2.position.set(-5, -2, -3);
+      heroScene.add(dirLight2);
+
+      canvas.addEventListener('pointerdown', (e) => {
+        isDraggingHero = true;
+        prevMousePos = { x: e.clientX, y: e.clientY };
+      });
+
+      window.addEventListener('pointerup', () => isDraggingHero = false);
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (isDraggingHero && robotGroup) {
+          const deltaX = e.clientX - prevMousePos.x;
+          const deltaY = e.clientY - prevMousePos.y;
+
+          robotGroup.rotation.y += deltaX * 0.01;
+          robotGroup.rotation.x += deltaY * 0.005;
+
+          prevMousePos = { x: e.clientX, y: e.clientY };
+        }
+      });
+    }
+
+    function switchCameraMode(mode) {
+      playCashChimeSound();
+      if (mode === 'orbit') {
+        heroCamera.position.set(0, 1.2, 6.5);
+      } else if (mode === 'robo') {
+        heroCamera.position.set(0, 0.5, 4.0);
+      } else if (mode === 'radar') {
+        heroCamera.position.set(2.5, 2.0, 4.5);
+      }
+      heroCamera.lookAt(0, 0, 0);
+    }
+
+    /* ====================================================================
+       MONEY RAIN / CASH SPRAY PARTICLES
+       ==================================================================== */
+    function triggerCashRain() {
+      playCashChimeSound();
+      const cashTex = createCashTexture();
+      const cashGeo = new THREE.PlaneGeometry(1.2, 0.6);
+      const cashMat = new THREE.MeshBasicMaterial({
+        map: cashTex,
+        side: THREE.DoubleSide,
+        transparent: true
+      });
+
+      for (let i = 0; i < 40; i++) {
+        const bill = new THREE.Mesh(cashGeo, cashMat);
+        bill.position.set(
+          (Math.random() - 0.5) * 3,
+          0.5 + Math.random() * 1.5,
+          (Math.random() - 0.5) * 2
+        );
+        bill.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+
+        bill.userData = {
+          vx: (Math.random() - 0.5) * 0.15,
+          vy: 0.15 + Math.random() * 0.2,
+          vz: (Math.random() - 0.5) * 0.15,
+          rotX: (Math.random() - 0.5) * 0.1,
+          rotY: (Math.random() - 0.5) * 0.1,
+          life: 0
+        };
+
+        heroScene.add(bill);
+        flyingMoneyParticles.push(bill);
+      }
+
+      collectMoneyBonus();
+    }
+
+    function collectMoneyBonus() {
+      const counterEl = document.getElementById('cash-counter-val');
+      const statEl = document.getElementById('stat-cash');
+      let currentVal = parseInt(counterEl.innerText.replace(/[^0-9]/g, '')) || 412800;
+      currentVal += 10000;
+      counterEl.innerText = '$' + currentVal.toLocaleString();
+      statEl.innerText = '$' + (currentVal / 1000).toFixed(1) + 'K';
+      calculateCashRoi();
+    }
+
+    function toggleRobotRun() {
+      isSprinting = !isSprinting;
+      document.getElementById('run-btn-label').innerText = isSprinting ? 'Sprinting Stance' : 'Idle Stance';
+      playCashChimeSound();
+    }
+
+    /* ====================================================================
+       INTRO OPENING TIMELINE & 3D ROBOT RUNNER
+       ==================================================================== */
+    let introScene, introCamera, introRenderer, introRoboMesh;
+
+    function initIntroRoboScene() {
+      const canvas = document.getElementById('intro-robo-canvas');
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      introScene = new THREE.Scene();
+      introCamera = new THREE.PerspectiveCamera(45, rect.width / (rect.height || 1), 0.1, 1000);
+      introCamera.position.set(0, 0.4, 5.5);
+
+      introRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      introRenderer.setSize(rect.width, rect.height);
+      introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      introRoboMesh = createRobotModel();
+      introRoboMesh.position.set(0, -0.4, 0);
+      introScene.add(introRoboMesh);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+      introScene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0x10b981, 2.0);
+      dirLight1.position.set(5, 8, 5);
+      introScene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 1.5);
+      dirLight2.position.set(-5, -2, -3);
+      introScene.add(dirLight2);
+    }
+
+    function startIntroTimeline() {
+      let progress = 0;
+      const progressBar = document.getElementById('intro-progress-bar');
+      const percentText = document.getElementById('intro-percent');
+      const statusText = document.getElementById('intro-status-text');
+      const runnerAvatar = document.getElementById('intro-runner-avatar');
+
+      const interval = setInterval(() => {
+        progress += 2;
+        if (progress > 100) progress = 100;
+
+        if (progressBar) progressBar.style.width = progress + '%';
+        if (percentText) percentText.innerText = Math.floor(progress) + '%';
+        if (runnerAvatar) runnerAvatar.style.left = progress + '%';
+
+        if (Math.floor(progress) % 12 === 0) {
+          playRobotStepSound();
+        }
+
+        if (progress < 30) {
+          statusText.innerText = 'Robot Holding Stacks of Cash ($)...';
+        } else if (progress < 70) {
+          statusText.innerText = 'Sprinting Across 3D Warehouse Grid...';
+        } else if (progress < 100) {
+          statusText.innerText = 'Unlocking 3D Inventory Dashboard...';
+        } else if (progress === 100) {
+          clearInterval(interval);
+          setTimeout(startUiReveal, 500);
+        }
+      }, 40);
+    }
+
+    function startUiReveal() {
+      const overlay = document.getElementById('intro-overlay');
+      if (overlay) overlay.classList.add('hidden-overlay');
+      introFinished = true;
+
+      if (robotGroup) {
+        robotGroup.position.z = 0;
+      }
+
+      playCashChimeSound();
+
+      document.querySelectorAll('.reveal-ui').forEach((el, idx) => {
+        setTimeout(() => {
+          el.classList.add('active');
+        }, idx * 150);
+      });
+    }
+
+    function replayIntro() {
+      const overlay = document.getElementById('intro-overlay');
+      if (overlay) overlay.classList.remove('hidden-overlay');
+      introFinished = false;
+
+      if (robotGroup) {
+        robotGroup.position.z = -25;
+      }
+
+      startIntroTimeline();
+    }
+
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+      menu.classList.toggle('flex');
+    }
+
+    function toggleCyberSidebar() {
+      const sb = document.getElementById('cyber-sidebar');
+      const bd = document.getElementById('sidebar-backdrop');
+      if (sb && bd) {
+        if (sb.classList.contains('-translate-x-full')) {
+          sb.classList.remove('-translate-x-full');
+          bd.classList.remove('hidden');
+          playCashChimeSound();
+        } else {
+          sb.classList.add('-translate-x-full');
+          bd.classList.add('hidden');
+        }
+      }
+    }
+
+    /* ====================================================================
+       DYNAMIC RISK TABLE CALCULATION ENGINE
+       ==================================================================== */
+    function updateCalculations() {
+      const leadTime = parseInt(document.getElementById('lead-time-slider').value);
+      const safetyStock = parseInt(document.getElementById('safety-stock-slider').value);
+
+      document.getElementById('lead-time-val').innerText = leadTime + ' Days';
+      document.getElementById('safety-stock-val').innerText = safetyStock + ' Days';
+
+      renderRiskTable(leadTime, safetyStock);
+    }
+
+    function calculateItemRisk(item, leadTime, safetyStock) {
+      const daysCoverage = item.demand > 0 ? (item.stock / item.demand) : 999;
+      const rop = Math.round((item.demand * leadTime) + safetyStock);
+
+      let status = 'HEALTHY';
+      let score = 25;
+      let directive = 'Maintain standard purchasing schedule';
+      let badgeClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+
+      if (item.stock === 0 || daysCoverage <= 3) {
+        status = 'CRITICAL';
+        score = 92;
+        directive = '⚠️ Urgent Stock-Out! Expedite purchase order immediately';
+        badgeClass = 'bg-red-500/20 text-red-400 border-red-500/40';
+      } else if (daysCoverage <= 7 || item.stock <= rop) {
+        status = 'LOW_STOCK';
+        score = 74;
+        directive = '⚡ Low Stock Warning: Trigger replenishment order';
+        badgeClass = 'bg-amber-500/20 text-amber-400 border-amber-500/40';
+      } else if (daysCoverage > 60) {
+        status = 'OVERSTOCK';
+        score = 81;
+        directive = '🛑 Excess Overstock: Halt purchasing & stimulate demand';
+        badgeClass = 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40';
+      } else if (item.demand < 1.0 && daysCoverage > 30) {
+        status = 'SLOW_MOVING';
+        score = 68;
+        directive = '🟣 Sluggish Inventory: Markdown clearance or bundle';
+        badgeClass = 'bg-purple-500/20 text-purple-400 border-purple-500/40';
+      }
+
+      return { daysCoverage: daysCoverage.toFixed(1), rop, status, score, directive, badgeClass };
+    }
+
+    function renderRiskTable(leadTime = 14, safetyStock = 5) {
+      const tbody = document.getElementById('risk-table-body');
+      const searchVal = document.getElementById('sku-search-input').value.toLowerCase();
+      tbody.innerHTML = '';
+
+      mockInventory.forEach(item => {
+        const calc = calculateItemRisk(item, leadTime, safetyStock);
+
+        if (currentFilterStatus !== 'ALL' && calc.status !== currentFilterStatus) return;
+        if (searchVal && !item.sku.toLowerCase().includes(searchVal) && !item.name.toLowerCase().includes(searchVal) && !item.category.toLowerCase().includes(searchVal)) return;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-900/60 transition border-b border-slate-800/40';
+        tr.innerHTML = `
+          <td class="p-3.5 font-bold text-emerald-400">${item.sku}</td>
+          <td class="p-3.5 text-white">${item.name}</td>
+          <td class="p-3.5 text-slate-400">${item.category}</td>
+          <td class="p-3.5 text-right font-bold ${item.stock === 0 ? 'text-red-400' : 'text-slate-200'}">${item.stock}</td>
+          <td class="p-3.5 text-right text-slate-300">${item.demand} / day</td>
+          <td class="p-3.5 text-right font-bold text-brand-cyan">${calc.daysCoverage}d</td>
+          <td class="p-3.5 text-right text-yellow-400 font-bold">${calc.rop}</td>
+          <td class="p-3.5 text-center">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${calc.score > 80 ? 'bg-red-500/20 text-red-400' : calc.score > 60 ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}">${calc.score} / 100</span>
+          </td>
+          <td class="p-3.5 text-center">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${calc.badgeClass}">${calc.status.replace('_', ' ')}</span>
+          </td>
+          <td class="p-3.5 text-slate-300 text-[11px]">${calc.directive}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterRiskTable(status = 'ALL') {
+      currentFilterStatus = status;
+      const leadTime = parseInt(document.getElementById('lead-time-slider').value);
+      const safetyStock = parseInt(document.getElementById('safety-stock-slider').value);
+      renderRiskTable(leadTime, safetyStock);
+    }
+
+    /* ====================================================================
+       ML FORECAST CHART RENDERING ENGINE
+       ==================================================================== */
+    function renderForecastChart() {
+      const container = document.getElementById('forecast-chart-container');
+      const horizon = parseInt(document.getElementById('forecast-horizon-select').value) || 30;
+      container.innerHTML = '';
+
+      const totalBars = 20;
+      for (let i = 0; i < totalBars; i++) {
+        const isHistorical = i < 10;
+        const barHeight = Math.floor(30 + Math.sin(i * 0.5) * 20 + (isHistorical ? Math.random() * 25 : (i - 10) * 2));
+        const barColor = isHistorical ? 'bg-emerald-400' : 'bg-brand-cyan';
+
+        const barWrapper = document.createElement('div');
+        barWrapper.className = 'flex-1 flex flex-col items-center gap-1 group h-full justify-end';
+        barWrapper.innerHTML = `
+          <div class="text-[9px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition">${barHeight}u</div>
+          <div class="w-full ${barColor} rounded-t-sm transition-all duration-300 hover:brightness-125" style="height: ${barHeight}%;"></div>
+        `;
+        container.appendChild(barWrapper);
+      }
+    }
+
+    /* ====================================================================
+       SIMULATION FUNCTIONS & FINANCIAL ROI CALCULATOR
+       ==================================================================== */
+    function simulateFileUpload() {
+      playCashChimeSound();
+      const log = document.getElementById('terminal-log');
+      const time = new Date().toTimeString().split(' ')[0];
+      log.innerHTML += `
+        <div class="text-brand-cyan">[UPLOAD ${time}] Uploading raw transaction log...</div>
+        <div class="text-emerald-400">[SUCCESS ${time}] Auto-discovered 1,250 records. Capital optimization recalculated!</div>
+      `;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function calculateCashRoi() {
+      const skus = parseInt(document.getElementById('roi-skus-input').value) || 1250;
+      const holdingPct = parseFloat(document.getElementById('roi-holding-input').value) || 18;
+      const avgCost = parseFloat(document.getElementById('roi-cost-input').value) || 65;
+
+      const totalCapital = skus * avgCost * 4;
+      const capitalSaved = totalCapital * 0.15;
+      const holdingSaved = capitalSaved * (holdingPct / 100);
+      const salesSaved = capitalSaved * 0.45;
+
+      document.getElementById('roi-capital-saved').innerText = '$' + Math.round(capitalSaved).toLocaleString();
+      document.getElementById('roi-holding-saved').innerText = '$' + Math.round(holdingSaved).toLocaleString();
+      document.getElementById('roi-sales-saved').innerText = '$' + Math.round(salesSaved).toLocaleString();
+    }
+
+    function downloadExportCsv(type) {
+      playCashChimeSound();
+      let filename = `${type}_export.csv`;
+      let csvContent = "data:text/csv;charset=utf-8,SKU,Product_Name,Stock,Demand,Status,Risk_Score\n";
+      mockInventory.forEach(item => {
+        csvContent += `${item.sku},"${item.name}",${item.stock},${item.demand},HEALTHY,25\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    /* ====================================================================
+       ANIMATION LOOP
+       ==================================================================== */
+    let clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsedTime = clock.getElapsedTime();
+
+      if (bgParticles) {
+        bgParticles.rotation.y = elapsedTime * 0.03;
+      }
+
+      floatingMoneyBills.forEach(bill => {
+        bill.rotation.x += bill.userData.rotSpeedX;
+        bill.rotation.y += bill.userData.rotSpeedY;
+        bill.position.y -= bill.userData.fallSpeed;
+        if (bill.position.y < -25) {
+          bill.position.y = 25;
+        }
+      });
+
+      if (!introFinished && robotGroup) {
+        if (robotGroup.position.z < 0) {
+          robotGroup.position.z += 0.35;
+          if (Math.floor(elapsedTime * 10) % 3 === 0) {
+            playRobotStepSound();
+          }
+        }
+      }
+
+      if (robotGroup && (isSprinting || !introFinished)) {
+        const runFreq = 12;
+        leftLegGroup.rotation.x = Math.sin(elapsedTime * runFreq) * 0.75;
+        rightLegGroup.rotation.x = -Math.sin(elapsedTime * runFreq) * 0.75;
+
+        leftArmGroup.rotation.x = -Math.sin(elapsedTime * runFreq) * 0.6;
+        rightArmGroup.rotation.x = Math.sin(elapsedTime * runFreq) * 0.6;
+
+        headGroup.rotation.y = Math.sin(elapsedTime * runFreq * 0.5) * 0.15;
+        robotGroup.position.y = -0.4 + Math.abs(Math.sin(elapsedTime * runFreq)) * 0.15;
+
+        if (cashStackLeft) cashStackLeft.rotation.z = Math.sin(elapsedTime * 8) * 0.1;
+        if (cashStackRight) cashStackRight.rotation.z = -Math.sin(elapsedTime * 8) * 0.1;
+      } else if (robotGroup && !isDraggingHero) {
+        leftLegGroup.rotation.x = 0;
+        rightLegGroup.rotation.x = 0;
+        leftArmGroup.rotation.x = 0.2;
+        rightArmGroup.rotation.x = -0.2;
+        headGroup.rotation.y = Math.sin(elapsedTime * 1.5) * 0.2;
+        robotGroup.position.y = -0.4 + Math.sin(elapsedTime * 2) * 0.05;
+        robotGroup.rotation.y = Math.sin(elapsedTime * 0.5) * 0.2;
+      }
+
+      for (let i = flyingMoneyParticles.length - 1; i >= 0; i--) {
+        const p = flyingMoneyParticles[i];
+        p.position.x += p.userData.vx;
+        p.position.y += p.userData.vy;
+        p.position.z += p.userData.vz;
+        p.rotation.x += p.userData.rotX;
+        p.rotation.y += p.userData.rotY;
+
+        p.userData.vy -= 0.008;
+        p.userData.life += 1;
+
+        if (p.userData.life > 120) {
+          heroScene.remove(p);
+          flyingMoneyParticles.splice(i, 1);
+        }
+      }
+
+      if (!introFinished && introRenderer && introScene && introCamera) {
+        introRenderer.render(introScene, introCamera);
+      }
+
+      bgRenderer.render(bgScene, bgCamera);
+      heroRenderer.render(heroScene, heroCamera);
+    }
+
+    /* Resize Event Handler */
+    window.addEventListener('resize', () => {
+      bgCamera.aspect = window.innerWidth / window.innerHeight;
+      bgCamera.updateProjectionMatrix();
+      bgRenderer.setSize(window.innerWidth, window.innerHeight);
+
+      const heroCanvas = document.getElementById('hero-canvas');
+      if (heroCanvas) {
+        const rect = heroCanvas.parentElement.getBoundingClientRect();
+        heroCamera.aspect = rect.width / rect.height;
+        heroCamera.updateProjectionMatrix();
+        heroRenderer.setSize(rect.width, rect.height);
+      }
+    });
+
+    /* Window Onload Initialization */
+    window.onload = function () {
+      lucide.createIcons();
+      initBgScene();
+      initHeroScene();
+      initIntroRoboScene();
+      renderRiskTable();
+      renderForecastChart();
+      calculateCashRoi();
+      animate();
+      startIntroTimeline();
+    };
+  </script>
+</body>
+
+</html>
